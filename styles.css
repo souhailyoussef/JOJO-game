@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins');
+
+body {
+    text-align: center;
+    font-family: 'Poppins';
+}
+
+#board {
+    background-image: url('./resources/egypt.jpeg');
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.score-bar {
+    display: flex;
+    width:100%;
+    margin: auto;
+    border: 1px solid navy;
+    height: 50px;
+    padding: 10px;
+    flex-wrap: nowrap;
+    justify-content: center;    
+}
+
+#player-health {
+    width:40%;
+    background: green;
+}
+#enemy-health {
+    width:40%;
+    background: green;
+
+}
+#timer {
+    width: auto;
+}
