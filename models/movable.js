@@ -12,6 +12,10 @@ const Movable = Base => class extends Base {
         }
     }
 
+    isIdle() {
+        return ['IDLE','MOVE_RIGHT', 'MOVE_LEFT'].includes(this.action) && this.isOnGround;
+    }
+
 
     jump() {
         const previousActiopn = this.action;
@@ -21,6 +25,20 @@ const Movable = Base => class extends Base {
             this.isOnGround = false;
         }
         this.action = previousActiopn;
+    }
+
+    crouch() {
+        if (!this.isIdle()) return;
+        this.action = "CROUCH";
+        this.y += this.height / 2;
+        this.height = this.height/2;
+
+    }
+
+    uncrouch() {
+        if (!this.isOnGround) return;
+        this.action = "IDLE";
+        this.height = this.originalHeight;
     }
 
     applyPhysics(boardHeight) {

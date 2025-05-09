@@ -10,5 +10,6 @@ class Minion {
         this.jumpPower = -30;
         this.isOnGround = false;
         this.isFacingRight = true;
+        this.originalHeight = this.height;
     }
 }

@@ -13,28 +13,39 @@ const attackVelocityX = TILE_SIZE;
 /** GAME VARIABLES */
 
 let board, context;
-let player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX);
-let enemy = new Player(boardWidth/2 - TILE_SIZE*4, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX);
+let player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
+let enemy = new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
+
 
 let playerImg = Assets.player;
+let moveImg = Assets.player;
 let enemyImg = Assets.boss;
 let attackImg = Assets.playerAttack;
-let playerBlockImg = Assets.playerBlock;
+let blockImg = Assets.playerBlock;
+let crouchImg = Assets.crouch;
+let kickImg = Assets.kick;
+const keys = {};
+
+let lastMoveTime = 0;
+const moveInterval = 30;
+let lastActionTime = 0;
+const actionInterval = 100;
 
 const soundManager = new SoundManager();
 
 // Load sounds
 soundManager.load('attack', './resources/soundeffects/ora.mp3');
+soundManager.load('kick', './resources/soundeffects/muda.mp3')
 
-init();
 
 
 function init() {
     setupCanvas();
-    loadAssets();
+    document.addEventListener('keydown', (e) => keys[e.code] = true);
+    document.addEventListener('keyup', (e) => keys[e.code] = false);
+    document.addEventListener('dmgTakenEvent', updateHP)
     requestAnimationFrame(update);
-    document.addEventListener("keydown", movePlayer);
-    document.addEventListener("keyup", attack);
+
 }
 
 function setupCanvas() {
@@ -44,23 +55,50 @@ function setupCanvas() {
     context = board.getContext('2d');
 }
 
-function loadAssets() {
-    playerImg.onload = () => player.draw(context, playerImg);
-    player.onload = () => enemy.draw(context, enemyImg);
+function loadAssets(onComplete) {
+    let loaded = 0;
+    const totalAssets = Object.keys(Assets).length;
+
+    for (let key in Assets) {
+        Assets[key].onload = () => {
+            loaded++;
+            // Once all assets are loaded, start the game
+            if (loaded === totalAssets) {
+                onComplete();
+            }
+        };
+    }
+
 }
+
+loadAssets(init);
 
 /** GAME LOOP */
 function update() {
     requestAnimationFrame(update);
+    console.log('Updating game frame'); // Log to ensure this is called
 
     context.clearRect(0,0, boardWidth, boardHeight);
-
+    handleMovement();
+    const playerImages = {
+        move: playerImg,
+        block: blockImg,
+        crouch: crouchImg,
+        kick: kickImg
+    }
+    const enemyImages = {
+        move: moveImg,
+        block: blockImg,
+        crouch: crouchImg,
+        kick: kickImg
+    };
     player.applyPhysics(boardHeight);
-    player.draw(context, playerImg, playerBlockImg);
+    drawHelper.drawCharacter(context, player, playerImages);
+    drawHelper.drawCharacter(context, enemy, enemyImages);
     enemy.applyPhysics(boardHeight);
-    enemy.draw(context, enemyImg);
+    handleAction();
     updateAttacks();
-    player.drawAttacks(context, attackImg);
+    player.drawAttacks(context, {'punch': attackImg, 'kick': kickImg});
 }
 
 function updateAttacks() {
@@ -75,38 +113,85 @@ function updateAttacks() {
     }
 }
 
+function handleMovement() {
+    const currentTime = Date.now();
+
+    if (currentTime - lastMoveTime < moveInterval) {
+        return;
+    }
+
+    lastMoveTime = currentTime;
+    if (!keys['ArrowDown']) player.uncrouch();
+    if (keys['KeyW']) {player.block(); return;};
+    if (keys['ArrowDown']) {player.crouch(); return};
+
+    if (keys['ArrowLeft'] && isInBounds(player, false)) {
+        if (isColliding(player, enemy) && player.x >= enemy.x) return;
+        player.move(-playerVelocityX,0);
+    } 
+    if (keys['ArrowRight'] && isInBounds(player, true)) {
+        if (isColliding(player, enemy) && player.x <= enemy.x) return;
+        player.move(playerVelocityX, 0);
+    } 
+    if (keys['Space']) player.jump();
+}
+
+function handleAction() {
+    const currentTime = Date.now();
+
+    if (currentTime - lastActionTime < actionInterval) {
+        return;
+    }
+
+    lastActionTime = currentTime;
+    if (keys['KeyQ'] && keys['ArrowDown'] && player.isOnGround) {
+        player.kick(enemy,200);
+        soundManager.play('kick'); 
+
+    }
+    else if (keys['KeyQ']) {
+        keys['KeyW'] = false;  // disable block key
+        player.attack();
+    }
+}
+
 
 function movePlayer(e) {
-
-    if (e.code === 'ArrowLeft' && player.x - playerVelocityX >=0) {
+    const code = e.code;
+    keys[code] = true; // Mark key as pressed
+    if (code === 'ArrowLeft' && player.x - playerVelocityX >=0) {
         if (isColliding(player, enemy) && player.x >= enemy.x) return;
         player.move(-playerVelocityX,0);
         return;
     } 
-    if (e.code === 'ArrowRight' && player.x + playerVelocityX <= boardWidth - player.width) {
+    if (code === 'ArrowRight' && player.x + playerVelocityX <= boardWidth - player.width) {
         if (isColliding(player, enemy) && player.x <= enemy.x) return;
         player.move(playerVelocityX, 0);
         return;
     }
-    if (e.code === 'Space') {
+    if (code === 'ArrowDown') {
+        player.crouch();
+        return;
+    }
+    if (code === 'Space') {
         player.jump(enemyVelocityY);
         return;
     } 
-    if (e.key.toLowerCase() === 'z') {
+    if (code === 'KeyW') {
         player.block();
         return;
     }
-    if (e.key === '4' && enemy.x - enemyVelocityX >=0) {
+    if (code === 'Numpad4' && enemy.x - enemyVelocityX >=0) {
         if (isColliding(player, enemy) && enemy.x >= player.x) return;
         enemy.move(-enemyVelocityX,0);
         return;
     } 
-    if (e.key === '6' && enemy.x + enemyVelocityX <= boardWidth - enemy.width) {
+    if (code === 'Numpad6' && enemy.x + enemyVelocityX <= boardWidth - enemy.width) {
         if (isColliding(player, enemy) && enemy.x <= player.x) return;
         enemy.move(enemyVelocityX,0);
         return;
     } 
-    if (e.key === '8') {
+    if (code === 'Numpad8') {
         enemy.jump(enemyVelocityY);
         return;
     } 
@@ -121,7 +206,6 @@ function moveAttack(attack) {
         if (isColliding(attack, enemy) && enemy.action !== 'BLOCK') {
             console.log('attack landed');
             enemy.takeHit(attack);
-            updateHP();
             return null;
         } 
         if (isColliding(attack, enemy) && enemy.action === 'BLOCK') {
@@ -141,31 +225,18 @@ function isColliding(player, enemy){
     return ox && oy;
 }
 
-function attackLanded(player, enemy) {
-    return isColliding(player, enemy) && enemy.action !== 'BLOCK';
-}
-
-function attack(e) {
-    let isBlockActive = false;
-    if (e.key.toLowerCase() === 'z') {
-        isBlockActive = true;
-        player.action = 'IDLE';
-        return;
-    }
-        // Prevent other keys while Z(block) is held
-     if (isBlockActive && e.key.toLowerCase() !== "z") {
-        e.preventDefault();
-        return;
-    }
-    if (e.key.toLowerCase() === 'a') {
-        player.attack();
-        soundManager.play('attack');
-        return;
-    }
+function isInBounds(player, right) {
+    if (right) return player.x + playerVelocityX <= boardWidth - player.width;
+    return player.x - playerVelocityX >=0;
 }
 
 
-function updateHP() {
-    document.getElementById('player-health').innerText = player.hp;
-    document.getElementById('enemy-health').innerText = enemy.hp;
+
+function updateHP(e) {
+    const target = e.detail.target;
+    const dmg = e.detail.dmg;
+    const hp = e.detail.hp;
+    if (target == 1) {
+        document.getElementById('player-health').innerText = hp;
+    } else document.getElementById('enemy-health').innerText = hp;
 }
