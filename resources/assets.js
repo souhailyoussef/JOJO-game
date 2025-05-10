@@ -1,17 +1,26 @@
-const Assets = {
-    player: new Image(),
-    enemy: new Image(),
-    boss: new Image(),
-    playerAttack: new Image(),
-    playerBlock: new Image(),
-    crouch: new Image(),
-    kick: new Image()
-}
+function loadCharacterAssets(characters, callback) {    
+    const actions = ['idle', 'block', 'throw', 'punch', 'kick', 'jump', 'crouch', 'projectile'];
+    const assets = {};
+    let totalAssets = characters.length * actions.length;
+    let loadedAssets = 0;
 
-Assets.player.src = './resources/jotaro.png';
-Assets.enemy.src = './resources/dio.png';
-Assets.boss.src = './resources/dio.png';
-Assets.playerAttack.src = './resources/start_platinum_attack.gif';
-Assets.playerBlock.src = './resources/jotaro_block.png';
-Assets.crouch.src = './resources/crouch.png';
-Assets.kick.src = './resources/kick.png';
+    characters.forEach(character => {
+        assets[character] = {};
+        actions.forEach(action => {
+            const img = new Image();
+            const path = `./resources/${character}/${action}.png`;
+            img.src = path;
+            img.onload = () => { 
+                loadedAssets++;
+                if (loadedAssets === totalAssets) {
+                    callback(assets);
+                }
+            };
+            img.onerror = () => {
+                console.error(`Failed to load ${character}/${action}`);
+            };
+
+            assets[character][action] = img;
+        });
+    });
+}

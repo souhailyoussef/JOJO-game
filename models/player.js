@@ -2,20 +2,26 @@ class Player extends Movable(Minion) {
     constructor(x, y, width, height, velocityX, id) {
         super(x,y,width,height);
         this.velocityX = velocityX;
-        this.action = 'MOVE_RIGHT';
+        this.action = 'IDLE';
         this.attacks = [];
         this.hp = 100;
-        this.kickRange = 20;
+        this.kickRange = 200;
+        this.punchRange = 150;
         this.id = id;
+        this.actionTimer= 0;
+    }
+
+    active() {
+        return this.actionTimer > 0;
     }
     
     attack() {
-        const previousAction = this.action;
-        this.action = 'ATTACK';
-        const attack = new Attack(this.x, this.y, this.width, this.height, this.velocityX/2, 'punch');
+        if (this.actionTimer > 0) return;
+        this.action = 'THROW';
+        this.actionTimer = 25;
+        const attack = new Projectile(this.x, this.y, this.width*2/3, this.height, this.velocityX*2);
         attack.isFacingRight = this.isFacingRight;
         this.attacks.push(attack);
-        this.action = previousAction;
     }
 
     block() {
@@ -23,65 +29,42 @@ class Player extends Movable(Minion) {
         this.action = 'BLOCK';
     }
 
-    kick(enemy, timeout) {
+    kick(enemy, playSound) {
         if (!this.isOnGround) return;
-        const previousAction = this.action;
+        if (this.actionTimer > 0) return;
         this.action = 'KICK';
-        const attack = new Attack(this.x, this.y/2, this.width, this.height / 2, this.velocityX / 2, 'kick');
+        this.actionTimer = 40;
+        const attack = new Attack(this.x, this.y/2, this.width, this.height / 2, 0, 'kick');
         if (this.isKickLanded(enemy)) {
             console.log('Kick landed!');
             enemy.takeHit(attack);
         }
-        setTimeout(() => {
-            this.action = previousAction;
-            this.kickInProgress = false;
-        }, timeout);
+        playSound();
     }
 
-
-    draw(ctx, moveImg, blockImg, kickImg) {
-        ctx.save();
-        if (!this.isFacingRight) {
-            ctx.scale(-1, 1);
-            ctx.translate(-this.x - this.width, this.y);
-        } else {
-            ctx.translate(this.x, this.y);
+    punch(enemy, callback) {
+       if (!this.isOnGround) return;
+       if (this.actionTimer > 0) return;
+       this.action = 'PUNCH';
+       this.actionTimer = 20;
+       const attack = new Attack(this.x, this.y, this.punchRange, this.height, 0, 'punch');
+       if (this.isPunchLanded(enemy)) {
+            console.log('Punch landed!');
+            enemy.takeHit(attack);
         }
-    
-        switch(this.action) {
-            case "MOVE_LEFT":
-            case "MOVE_RIGHT":
-                ctx.drawImage(moveImg, 0, 0, this.width, this.height);
-                break;
-            case "BLOCK":
-                ctx.drawImage(blockImg, 0, 0, this.width, this.height);
-                break;
-            case "CROUCH":
-                ctx.drawImage(crouchImg, 0, 0, this.width, this.height);
-                break;
-            case "KICK":
-                ctx.drawImage(kickImg, 0, 0, this.width, this.height);
-                break;
-            default:
-                ctx.drawImage(moveImg, 0, 0, this.width, this.height);
-        }
-        ctx.restore(); 
+       callback();
     }
 
     isKickLanded(enemy) {
-        let kickRangeX = this.isFacingRight ? this.x + this.kickRange : this.x - this.kickRange;
-        return (
-            this.x + kickRangeX > enemy.x &&
-            this.x < enemy.x + enemy.width &&
-            this.y < enemy.y + enemy.height &&
-            this.y + this.height > enemy.y
-        );
+        const distance = Math.abs(enemy.x - this.x);
+        const overlap = distance <= this.kickRange;
+        return overlap;
     }
 
-   
-
-    drawAttacks(ctx, imgs) {
-        player.attacks.forEach(a => a.draw(ctx, imgs[a.type]));
+    isPunchLanded(enemy) {
+        const distance = Math.abs((enemy.x - this.x));
+        const overlap = distance <= this.punchRange;
+        return overlap;
     }
 
     takeHit(attack) {

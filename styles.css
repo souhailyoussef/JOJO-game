@@ -3,12 +3,55 @@
 body {
     text-align: center;
     font-family: 'Poppins';
+    overflow-x: hidden;
 }
 
 #board {
     background-image: url('./resources/egypt.jpeg');
     background-repeat: no-repeat;
     background-size: cover;
+    display: 'none';
+}
+
+#menu table {
+    width :100%;
+    table-layout: fixed;
+}
+
+td {
+  border: 2px solid black;
+  border-collapse: collapse;
+}
+
+#menu .fighter {
+    height: 500px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.8;
+    cursor: pointer;
+    transition: 0.5s;
+    transform: rotateX('30deg');
+}
+
+#menu .fighter:hover {
+    opacity: 1;
+}
+
+.jotaro {
+  background-image: url('./resources/jotaro_selector.jpg');
+}
+
+.dio {
+  background-image: url('./resources/dio_selector.jpg');
+}
+
+.kakyoin {
+  background-image: url('./resources/kakyoin_selector.jpg');
+}
+
+.joseph {
+  background-image: url('./resources/joseph_selector.jpg');
 }
 
 .score-bar {

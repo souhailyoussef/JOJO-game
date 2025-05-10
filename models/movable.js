@@ -3,11 +3,11 @@ const Movable = Base => class extends Base {
         this.x += dx;
         this.y -= dy;
         if (dx > 0) {
-            this.action = "MOVE_RIGHT";
+            if (this.isOnGround) this.action = "MOVE_RIGHT";
             this.isFacingRight = true;
         }
         if (dx < 0) {
-            this.action = "MOVE_LEFT";
+            if (this.isOnGround) this.action = "MOVE_LEFT";
             this.isFacingRight = false;
         }
     }
@@ -18,17 +18,16 @@ const Movable = Base => class extends Base {
 
 
     jump() {
-        const previousActiopn = this.action;
         this.action = "JUMP";
         if (this.isOnGround) {
             this.velocityY = this.jumpPower;
             this.isOnGround = false;
         }
-        this.action = previousActiopn;
     }
 
     crouch() {
         if (!this.isIdle()) return;
+        if (this.action === 'CROUCH') return;
         this.action = "CROUCH";
         this.y += this.height / 2;
         this.height = this.height/2;
@@ -37,7 +36,9 @@ const Movable = Base => class extends Base {
 
     uncrouch() {
         if (!this.isOnGround) return;
-        this.action = "IDLE";
+        if (this.action === "CROUCH" || this.action === "JUMP") {
+            this.action = "IDLE";
+        }
         this.height = this.originalHeight;
     }
 

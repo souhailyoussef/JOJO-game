@@ -4,22 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <title>JOJO Space Invaders</title>
+    <title>JOJO Street Fighter</title>
 </head>
 <body>
-    <h1>JOJO Space Invaders</h1>
+    <h1>JOJO Street Fighter</h1>
     <div class="score-bar">
         <div id="player-health"></div>
         <div id="timer">120s</div>
         <div id="enemy-health"></div>
+        
+        <button id="startBtn">Start Game</button>
+
     </div>
-    <canvas id="board"></canvas>
+    <div id="menu">
+            <table>
+                <tr><th colspan="4">Select your stand</th></tr>
+                <tr>
+                    <td class="fighter jotaro" fighter="jotaro"></td>
+                    <td class="fighter dio" fighter="dio"></td>
+                    <td class="fighter kakyoin" fighter="kakyoin"></td>
+                    <td class="fighter joseph" fighter="joseph"></td>
+                </tr>
+            </table>
+        </div>
+    <canvas hidden id="board"></canvas>
     <script src="./drawHelper.js"></script>
     <script src="./soundManager.js"></script>
     <script src="./models/movable.js"></script>
     <script src="./models/minion.js"></script>
+    <script src="./models/projectile.js"></script>
     <script src="./models/attack.js"></script>
-    <script src="./models/boss.js"></script>
     <script src="./resources/assets.js"></script>
     <script src="./models/player.js"></script>
     <script src="game.js"></script>

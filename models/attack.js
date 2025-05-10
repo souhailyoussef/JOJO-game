@@ -1,4 +1,4 @@
-class Attack extends Movable(Minion) {
+class Attack extends Minion {
     constructor(x, y, width, height, velocityX, type) {
         super(x,y,width,height);
         this.active = true;
@@ -6,9 +6,5 @@ class Attack extends Movable(Minion) {
         this.velocityX = velocityX;
         this.isFacingRight = true;
         this.type = type;
-    }
-
-    draw(ctx, img) {
-        ctx.drawImage(img, this.x, this.y, this.width, this.height)
     }
 }
