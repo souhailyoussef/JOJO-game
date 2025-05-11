@@ -131,9 +131,19 @@ function handleMovement() {
 
     lastMoveTime = currentTime;
     if (!keys['ArrowDown'] && !player.active()) player.uncrouch();
-    if (keys['KeyW']) {player.block(); return;};
-    if (keys['ArrowDown']) {player.crouch(); return};
-
+    if (keys['KeyW']) {
+        player.block(); 
+    };
+    if (!keys['KeyW'] && !player.active()) {
+        player.setIdle();
+    }
+    if (keys['ArrowDown']) {
+        player.crouch(); 
+    }
+    if (!keys['KeyP'] && !enemy.active()) enemy.uncrouch();
+    if (keys['KeyP']) {
+        enemy.crouch();
+    }
     if (keys['ArrowLeft'] && isInBounds(player, false)) {
         if (isColliding(player, enemy) && player.x >= enemy.x) return;
         if (player.actionTimer > 0) return;
@@ -203,10 +213,8 @@ function isInBounds(player, right) {
 function updateEntity(entity) {
     if (entity.actionTimer > 0) {
         entity.actionTimer--;
-        if (!entity.active()) {
-            entity.action = 'CROUCH';
-        }
     }
+    if (entity.actionTimer == 0 && entity.action !== 'CROUCH' && entity.action !== 'BLOCK') entity.setIdle();
     entity.frameTimer--;
     if (entity.frameTimer <= 0) {
         entity.frameIndex = (entity.frameIndex + 1) % entity.frameCount[entity.action];

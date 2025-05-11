@@ -5,8 +5,8 @@ class Player extends Movable(Minion) {
         this.action = 'IDLE';
         this.attacks = [];
         this.hp = 100;
-        this.kickRange = 200;
-        this.punchRange = 150;
+        this.kickRange = 400;
+        this.punchRange = 250;
         this.id = id;
         this.actionTimer= 0;
         this.frameIndex = 0;
@@ -21,6 +21,11 @@ class Player extends Movable(Minion) {
             'THROW': 2,
             'JUMP': 2,
         };
+    }
+
+    setIdle() {
+        this.action = 'IDLE';
+        this.height = this.originalHeight;
     }
 
     active() {
@@ -85,7 +90,9 @@ class Player extends Movable(Minion) {
     isPunchLanded(enemy) {
         const distance = Math.abs((enemy.x - this.x));
         const overlap = distance <= this.punchRange;
-        return overlap;
+        const distanceY = Math.abs((enemy.y - this.y));
+        const overlapY = distanceY <= this.height/3;
+        return overlap && overlapY;
     }
 
     takeHit(attack) {
@@ -119,5 +126,12 @@ class Player extends Movable(Minion) {
     }
 
 
+    uncrouch() {
+        if (!this.isOnGround) return;
+        if (this.action === "CROUCH" || this.action === "JUMP") {
+            this.action = "IDLE";
+        }
+        this.height = this.originalHeight;
+    }
     
 }

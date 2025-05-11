@@ -16,15 +16,6 @@ const Movable = Base => class extends Base {
         return ['IDLE','MOVE_RIGHT', 'MOVE_LEFT'].includes(this.action) && this.isOnGround;
     }
 
-
-    uncrouch() {
-        if (!this.isOnGround) return;
-        if (this.action === "CROUCH" || this.action === "JUMP") {
-            this.action = "IDLE";
-        }
-        this.height = this.originalHeight;
-    }
-
     applyPhysics(boardHeight) {
         this.velocityY += this.gravity;
         this.y += this.velocityY;
