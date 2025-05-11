@@ -17,23 +17,6 @@ const Movable = Base => class extends Base {
     }
 
 
-    jump() {
-        this.action = "JUMP";
-        if (this.isOnGround) {
-            this.velocityY = this.jumpPower;
-            this.isOnGround = false;
-        }
-    }
-
-    crouch() {
-        if (!this.isIdle()) return;
-        if (this.action === 'CROUCH') return;
-        this.action = "CROUCH";
-        this.y += this.height / 2;
-        this.height = this.height/2;
-
-    }
-
     uncrouch() {
         if (!this.isOnGround) return;
         if (this.action === "CROUCH" || this.action === "JUMP") {

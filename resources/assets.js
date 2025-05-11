@@ -1,7 +1,8 @@
 function loadCharacterAssets(characters, callback) {    
-    const actions = ['idle', 'block', 'throw', 'punch', 'kick', 'jump', 'crouch', 'projectile'];
+    const actions = ['idle', 'block', 'throw0', 'throw1', 'throw2', 'punch0', 'punch1', 'punch2', 'punch3', 'kick', 'kick0', 'kick1', 'jump', 'jump0', 'jump1', 'crouch', 'projectile'];
     const assets = {};
-    let totalAssets = characters.length * actions.length;
+    const uniqueChracters = new Set(characters);
+    let totalAssets = uniqueChracters.size * actions.length;
     let loadedAssets = 0;
 
     characters.forEach(character => {

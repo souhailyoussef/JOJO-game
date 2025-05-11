@@ -9,7 +9,8 @@ const drawHelper = {
             ctx.translate(entity.x, entity.y);
         }
         const action = entity.action || 'IDLE';
-        const image = drawHelper.getImageForAction(action, imgs);
+        const frameIndex = entity.frameIndex;
+        const image = drawHelper.getImageForAction(action, imgs, frameIndex);
         ctx.drawImage(image, 0, 0, entity.width, entity.height);
 
         ctx.restore();
@@ -26,7 +27,7 @@ const drawHelper = {
         ctx.drawImage(image, 0, 0, entity.width, entity.height);
         ctx.restore();
     },
-    getImageForAction: function(action, images) {
+    getImageForAction: function(action, images, frameIndex = 0) {
         switch (action) {
             case 'MOVE_LEFT':
             case 'MOVE_RIGHT':
@@ -36,13 +37,13 @@ const drawHelper = {
             case 'CROUCH':
                 return images.crouch;
             case 'KICK':
-                return images.kick;
+                return images[`kick${frameIndex}`];
             case 'PUNCH': 
-                return images.punch;
+                return images[`punch${frameIndex}`];
             case 'JUMP':
-                return images.jump;     
+                return images[`jump${frameIndex}`];     
             case 'THROW': 
-                return images.throw;  
+                return images[`throw${frameIndex}`];  
             case 'PROJECTILE':
                 return images.projectile;         
             default:

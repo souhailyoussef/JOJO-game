@@ -9,6 +9,18 @@ class Player extends Movable(Minion) {
         this.punchRange = 150;
         this.id = id;
         this.actionTimer= 0;
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+        this.frameDelay = 5;
+        this.frameCount = {
+            'IDLE': 1,
+            'CROUCH': 2,
+            'BLOCK': 1,
+            'PUNCH': 4,
+            'KICK': 2,
+            'THROW': 2,
+            'JUMP': 2,
+        };
     }
 
     active() {
@@ -18,7 +30,10 @@ class Player extends Movable(Minion) {
     attack() {
         if (this.actionTimer > 0) return;
         this.action = 'THROW';
-        this.actionTimer = 25;
+        this.actionTimer = 10;
+        this.frameIndex = 0;
+        this.frameDelay = this.actionTimer / this.frameCount[this.action];
+        this.frameTimer = this.frameDelay;
         const attack = new Projectile(this.x, this.y, this.width*2/3, this.height, this.velocityX*2);
         attack.isFacingRight = this.isFacingRight;
         this.attacks.push(attack);
@@ -33,7 +48,10 @@ class Player extends Movable(Minion) {
         if (!this.isOnGround) return;
         if (this.actionTimer > 0) return;
         this.action = 'KICK';
-        this.actionTimer = 40;
+        this.actionTimer = 20;
+        this.frameIndex = 0;
+        this.frameDelay = this.actionTimer / this.frameCount[this.action];
+        this.frameTimer = this.frameDelay;
         const attack = new Attack(this.x, this.y/2, this.width, this.height / 2, 0, 'kick');
         if (this.isKickLanded(enemy)) {
             console.log('Kick landed!');
@@ -47,6 +65,9 @@ class Player extends Movable(Minion) {
        if (this.actionTimer > 0) return;
        this.action = 'PUNCH';
        this.actionTimer = 20;
+       this.frameIndex = 0;
+       this.frameDelay = this.actionTimer / this.frameCount[this.action];
+       this.frameTimer = this.frameDelay;
        const attack = new Attack(this.x, this.y, this.punchRange, this.height, 0, 'punch');
        if (this.isPunchLanded(enemy)) {
             console.log('Punch landed!');
@@ -74,6 +95,26 @@ class Player extends Movable(Minion) {
             detail: { target: this.id, hp: this.hp, dmg: attack.dmg}
         });
         document.dispatchEvent(dmgTakenEvent);
+
+    }
+
+     jump() {
+        this.action = "JUMP";
+        this.frameIndex = 0;
+        this.frameDelay = 20 / this.frameCount[this.action];
+        this.frameTimer = this.frameDelay;
+        if (this.isOnGround) {
+            this.velocityY = this.jumpPower;
+            this.isOnGround = false;
+        }
+    }
+
+     crouch() {
+        if (!this.isIdle()) return;
+        if (this.action === 'CROUCH') return;
+        this.action = "CROUCH";
+        this.y += this.height / 2;
+        this.height = this.height/2;
 
     }
 

@@ -18,6 +18,7 @@ let board, context;
 let player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
 let enemy = new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
 
+let selectedCharacters = [];
 const keys = {};
 
 let lastMoveTime = 0;
@@ -39,7 +40,7 @@ fighters.forEach(fighter => {
     fighter.addEventListener('click', function() {
         const fighterName = this.getAttribute('fighter');
         soundManager.play('theme');
-        const selectedCharacters  = [fighterName, 'dio'];
+        selectedCharacters  = [fighterName, 'jotaro'];
         loadCharacterAssets(selectedCharacters, function(assets) {
             init(assets);
         })
@@ -48,7 +49,7 @@ fighters.forEach(fighter => {
 document.getElementById('startBtn').addEventListener('click', () => {
     document.getElementById('startBtn').style.display = 'none';
 
-    const selectedCharacters = ['jotaro', 'dio'];
+    selectedCharacters = ['jotaro', 'dio'];
 
     loadCharacterAssets(selectedCharacters, function(assets) {
         init(assets);
@@ -61,8 +62,8 @@ document.getElementById('startBtn').addEventListener('click', () => {
 
 function init(assets) {
     setupCanvas();
-    playerAssets = assets['jotaro'];
-    enemyAssets = assets['dio'];
+    playerAssets = assets[selectedCharacters[0]];
+    enemyAssets = assets[selectedCharacters[1]];
     document.addEventListener('keydown', (e) => keys[e.code] = true);
     document.addEventListener('keyup', (e) => keys[e.code] = false);
     document.addEventListener('dmgTakenEvent', updateHP);
@@ -86,6 +87,7 @@ function update() {
     context.clearRect(0,0, boardWidth, boardHeight);
     handleMovement();
     updateEntity(player);
+    updateEntity(enemy);
     updateAttacks();
     player.applyPhysics(boardHeight);
     enemy.applyPhysics(boardHeight);
@@ -93,6 +95,7 @@ function update() {
     drawHelper.drawCharacter(context, player, playerAssets);
     drawHelper.drawCharacter(context, enemy, enemyAssets);
     player.attacks.forEach(p => drawHelper.drawProjectile(context, p, playerAssets));
+    enemy.attacks.forEach(p => drawHelper.drawProjectile(context, p, playerAssets));
 
     handleAction();
 }
@@ -104,6 +107,16 @@ function updateAttacks() {
 
         if (!attack) {
             player.attacks.splice(i, 1);
+            i--;
+        }
+    }
+
+    for (let i = 0; i < enemy.attacks.length; i++) {
+        let attack = enemy.attacks[i];
+        attack = moveAttack(attack);
+
+        if (!attack) {
+            enemy.attacks.splice(i, 1);
             i--;
         }
     }
@@ -193,6 +206,11 @@ function updateEntity(entity) {
         if (!entity.active()) {
             entity.action = 'CROUCH';
         }
+    }
+    entity.frameTimer--;
+    if (entity.frameTimer <= 0) {
+        entity.frameIndex = (entity.frameIndex + 1) % entity.frameCount[entity.action];
+        entity.frameTimer = entity.frameDelay;
     }
 }
 
