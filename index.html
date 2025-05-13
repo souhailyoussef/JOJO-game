@@ -7,17 +7,58 @@
     <title>JOJO Street Fighter</title>
 </head>
 <body>
-    <h1>JOJO Street Fighter</h1>
-    <div class="score-bar">
-        <div id="player-health"></div>
-        <div id="timer">120s</div>
-        <div id="enemy-health"></div>
-        
-        <button id="startBtn">Start Game</button>
 
-    </div>
     <div id="menu">
-            <table>
+            <h1>JOJO Street Fighter</h1>
+            <div class="container">
+                <div class="player1">
+                    <h5 class="name"></h5>
+                    <img src="" alt="player1">
+                    <div class="stats">
+                        <span>power</span>
+                        <div class="power">
+                        </div>
+                        <span>speed</span>
+                        <div class="speed">
+                        </div>
+                        <span>range</span>
+                        <div class="range">
+                        </div>
+                    </div>
+                </div>
+                <div class="champ-select">
+                    <table>
+                        <tr>
+                            <td class="fighter jotaro" fighter="jotaro"></td>
+                            <td class="fighter dio" fighter="dio"></td>
+                            <td class="fighter kakyoin" fighter="kakyoin"></td>
+                            <td class="fighter joseph" fighter="joseph"></td>
+                        </tr>
+                        <tr>
+                            <td class="fighter jotaro" fighter="jotaro"></td>
+                            <td class="fighter dio" fighter="dio"></td>
+                            <td class="fighter kakyoin" fighter="kakyoin"></td>
+                            <td class="fighter joseph" fighter="joseph"></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="player2">
+                    <h5 class="name"></h5>
+                    <img src="" alt="player2">
+                    <div class="stats" style="text-align: right;">
+                         <span>power</span>
+                        <div class="power">
+                        </div>
+                        <span>speed</span>
+                        <div class="speed">
+                        </div>
+                        <span>range</span>
+                        <div class="range">
+                        </div>
+                    </div>
+                    </div>
+            </div>
+            <!-- <table>
                 <tr><th colspan="4">Select your stand</th></tr>
                 <tr>
                     <td class="fighter jotaro" fighter="jotaro"></td>
@@ -25,8 +66,8 @@
                     <td class="fighter kakyoin" fighter="kakyoin"></td>
                     <td class="fighter joseph" fighter="joseph"></td>
                 </tr>
-            </table>
-        </div>
+            </table> -->
+    </div>
     <canvas hidden id="board"></canvas>
     <script src="./drawHelper.js"></script>
     <script src="./soundManager.js"></script>

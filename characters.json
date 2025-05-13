@@ -1,0 +1,26 @@
+[
+    {
+        "name": "jotaro",
+        "power": 4,
+        "speed": 4,
+        "range": 2
+    },
+    {
+        "name": "dio",
+        "power": 5,
+        "speed": 4,
+        "range": 2
+    },
+    {
+        "name": "kakyoin",
+        "power": 3,
+        "speed": 5,
+        "range": 5
+    },
+    {
+        "name": "joseph",
+        "power": 4,
+        "speed": 4,
+        "range": 4
+    }
+]

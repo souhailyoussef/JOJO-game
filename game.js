@@ -21,25 +21,46 @@ let enemy = new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TIL
 let selectedCharacters = [];
 const keys = {};
 
-let lastMoveTime = 0;
-const moveInterval = 30;
-let lastActionTime = 0;
-const actionInterval = 100;
-
 const soundManager = new SoundManager();
 
 // Load sounds
 soundManager.load('attack', './resources/soundeffects/ora.mp3');
 soundManager.load('kick', './resources/soundeffects/muda.mp3');
 soundManager.load('theme', './resources/soundeffects/background_theme.mp3');
+soundManager.load('theme2', './resources/soundeffects/background_theme_2.mp3');
+
+let characters = new Map();
+fetch('./characters.json')
+  .then(res => res.json())
+  .then(data => {
+    data.forEach(char => {
+      characters.set(char.name.toLowerCase(), char);
+    });
+  });
 
 const fighters = document.querySelectorAll('.fighter');
+const player1Container = document.querySelector('.player1');
+const player2Container = document.querySelector('.player2');
+
 
 fighters.forEach(fighter => {
 
     fighter.addEventListener('click', function() {
+        console.log(characters);
         const fighterName = this.getAttribute('fighter');
-        soundManager.play('theme');
+        const fighter1State = characters.get(fighterName);
+        const fighter2State = characters.get(fighterName)
+        player1Container.querySelector('img').setAttribute('src', `./resources/${fighterName}/full_portrait.webp`);
+        player1Container.querySelector('.name').textContent = fighterName;
+        setStars(player1Container.querySelector('.power'), fighter1State.power);
+        setStars(player1Container.querySelector('.speed'), fighter1State.speed);
+        setStars(player1Container.querySelector('.range'), fighter1State.range);
+        player2Container.querySelector('img').setAttribute('src', `./resources/${fighterName}/full_portrait.webp`);
+        player2Container.querySelector('.name').textContent = fighterName;
+        setStars(player2Container.querySelector('.power'), fighter2State.power);
+        setStars(player2Container.querySelector('.speed'), fighter2State.speed);
+        setStars(player2Container.querySelector('.range'), fighter2State.range);
+        soundManager.play('theme2');
         selectedCharacters  = [fighterName, 'jotaro'];
         loadCharacterAssets(selectedCharacters, function(assets) {
             init(assets);
@@ -70,6 +91,7 @@ function init(assets) {
     });
     document.addEventListener('keyup', (e) => keys[e.code] = false);
     document.addEventListener('dmgTakenEvent', updateHP);
+    document.addEventListener('manaRechargeEvent', updateMana);
     requestAnimationFrame(update);
 
 }
@@ -91,7 +113,7 @@ function update() {
     handleMovement();
     updateEntity(player);
     updateEntity(enemy);
-    updateAttacks();
+    updateAttacks(player, enemy);
     player.applyPhysics(boardHeight);
     enemy.applyPhysics(boardHeight);
 
@@ -103,10 +125,10 @@ function update() {
     handleAction();
 }
 
-function updateAttacks() {
+function updateAttacks(player, enemy) {
     for (let i = 0; i < player.attacks.length; i++) {
         let attack = player.attacks[i];
-        attack = moveAttack(attack);
+        attack = moveAttack(attack, enemy);
 
         if (!attack) {
             player.attacks.splice(i, 1);
@@ -116,7 +138,7 @@ function updateAttacks() {
 
     for (let i = 0; i < enemy.attacks.length; i++) {
         let attack = enemy.attacks[i];
-        attack = moveAttack(attack);
+        attack = moveAttack(attack, player);
 
         if (!attack) {
             enemy.attacks.splice(i, 1);
@@ -126,27 +148,20 @@ function updateAttacks() {
 }
 
 function handleMovement() {
-    const currentTime = Date.now();
-
-    if (currentTime - lastMoveTime < moveInterval) {
-        return;
-    }
-
-    lastMoveTime = currentTime;
     if (!keys['ArrowDown'] && !player.active()) player.uncrouch();
     if (keys['KeyW']) {
         player.block(); 
     };
-    if (!keys['KeyW'] && !player.active() && player.isOnGround) {
+    if (!keys['KeyW'] && !player.active() && player.isOnGround && player.action !== 'SPECIAL_ATTACK') {
         player.setIdle();
     }
     if (keys['ArrowDown']) {
         player.crouch(); 
     }
-    if (!keys['KeyP'] && !enemy.active()) enemy.uncrouch();
-    if (keys['KeyP']) {
-        enemy.crouch();
+    if (keys['Numpad5']) {
+        enemy.crouch(); 
     }
+    if (!keys['Numpad5'] && !enemy.active()) enemy.uncrouch();
     if (keys['ArrowLeft'] && isInBounds(player, false)) {
         if (isColliding(player, enemy) && player.x >= enemy.x) return;
         if (player.actionTimer > 0) return;
@@ -158,18 +173,24 @@ function handleMovement() {
         player.move(playerVelocityX, 0);
     } 
     if (keys['Space']) player.jump();
+    if (keys['Numpad8']) enemy.jump();
 }
 
 function handleAction() {
-    const currentTime = Date.now();
 
-    if (currentTime - lastActionTime < actionInterval) {
-        return;
+    if (keys['KeyN']) {
+        keys['KeyW'] = false;
+        player.speicalAttack(enemy);
     }
-
-    lastActionTime = currentTime;
     if (keys['KeyQ'] && keys['ArrowDown'] && player.isOnGround && player.action === 'CROUCH') {
         player.kick(enemy, () => soundManager.play('kick'));
+    }
+    else if (keys['KeyQ']) {
+        keys['KeyW'] = false;
+        player.punch(enemy, () => soundManager.play('attack'));
+    }
+    if (keys['KeyP'] && keys['Numpad5'] && enemy.isOnGround && enemy.action === 'CROUCH') {
+        enemy.kick(player, () => soundManager.play('kick'));
     }
     else if (keys['KeyQ']) {
         keys['KeyW'] = false;
@@ -179,19 +200,24 @@ function handleAction() {
         keys['KeyW'] = false;
         player.attack();
     }
+    if (keys['KeyO']) {
+        keys['Keyl'] = false;
+        enemy.attack();
+    }
+    
 }
 
-function moveAttack(attack) {
+function moveAttack(attack, target) {
     const velocity = attack.isFacingRight ? attack.velocityX : -attack.velocityX;
     let newX = attack.x + velocity;
 
     if (newX >= 0 && newX <= boardWidth - attack.width) {
-        if (isAttackLanded(attack, enemy) && enemy.action !== 'BLOCK') {
+        if (isAttackLanded(attack, target) && target.action !== 'BLOCK') {
             console.log('attack landed');
-            enemy.takeHit(attack);
+            target.takeHit(attack);
             return null;
         } 
-        if (isAttackLanded(attack, enemy) && enemy.action === 'BLOCK') {
+        if (isAttackLanded(attack, target) && target.action === 'BLOCK') {
             console.log('attack blocked');
             return null;
         }
@@ -231,6 +257,9 @@ function updateEntity(entity) {
     }
 }
 
+function drawSpecialAttack() {
+    console.log('drawing');
+}
 
 
 function updateHP(e) {
@@ -240,4 +269,25 @@ function updateHP(e) {
     if (target == 1) {
         document.getElementById('player-health').innerText = hp;
     } else document.getElementById('enemy-health').innerText = hp;
+}
+
+function updateMana(e) {
+    const target = e.detail.target;
+    const amount = e.detail.amount;
+    const mana = e.detail.mana;
+    if (target == 1) {
+        document.getElementById('player-mana').innerText = mana;
+    } else document.getElementById('enemy-mana').innerText = mana;
+}
+
+function setStars(element, value) {  
+    element.textContent = '';
+  for (let i = 0; i < value; i++) {
+    const star = document.createElement('img');
+    star.src ='./resources/star.webp';
+    star.alt = '★';
+    star.style.width = '35px';
+    star.style.height = '35px';
+    element.appendChild(star);
+  }
 }

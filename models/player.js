@@ -7,6 +7,9 @@ class Player extends Movable(Minion) {
         this.hp = 100;
         this.kickRange = 400;
         this.punchRange = 250;
+        this.mana = 40;
+        this.ammo = 5;
+        this.ammoReload = 10000;
         this.id = id;
         this.actionTimer= 0;
         this.frameIndex = 0;
@@ -34,6 +37,7 @@ class Player extends Movable(Minion) {
     
     attack() {
         if (this.actionTimer > 0) return;
+        if (this.ammo === 0) return;
         this.action = 'THROW';
         this.actionTimer = 10;
         this.frameIndex = 0;
@@ -42,6 +46,14 @@ class Player extends Movable(Minion) {
         const attack = new Projectile(this.x, this.y, this.width*2/3, this.height/2, this.velocityX*2);
         attack.isFacingRight = this.isFacingRight;
         this.attacks.push(attack);
+        this.ammo--;
+        this.reloadAmmo();
+    }
+
+    reloadAmmo() {
+        setTimeout(() => {
+            this.ammo++;
+        }, this.ammoReload);
     }
 
     block() {
@@ -64,6 +76,7 @@ class Player extends Movable(Minion) {
         if (this.isKickLanded(enemy)) {
             console.log('Kick landed!');
             enemy.takeHit(attack);
+            this.incrementMana(5);
         }
         playSound();
     }
@@ -80,8 +93,18 @@ class Player extends Movable(Minion) {
        if (this.isPunchLanded(enemy)) {
             console.log('Punch landed!');
             enemy.takeHit(attack);
+            this.incrementMana(5);
         }
        callback();
+    }
+
+    incrementMana(amount) {
+        this.mana += amount;
+        this.mana = Math.max(Math.min(this.mana, 100),0);
+        const manaRechargeEvent = new CustomEvent('manaRechargeEvent', {
+            detail: { target: this.id, mana: this.mana, amount}
+        });
+        document.dispatchEvent(manaRechargeEvent);
     }
 
     isKickLanded(enemy) {

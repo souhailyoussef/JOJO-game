@@ -32,7 +32,7 @@ const drawHelper = {
 
         ctx.drawImage(image, 0, 0, drawWidth, entity.height);
         ctx.beginPath();
-        ctx.rect(0, 0, drawWidth, entity.height);
+        ctx.rect(0, 0, entity.width, entity.height);
         ctx.stroke();
 
         ctx.restore();
@@ -67,7 +67,9 @@ const drawHelper = {
             case 'THROW': 
                 return images[`throw${frameIndex}`];  
             case 'PROJECTILE':
-                return images.projectile;         
+                return images.projectile;   
+            case 'SPECIAL_ATTACK':
+                return images.specialAttack;          
             default:
                 return images.idle;
         }
