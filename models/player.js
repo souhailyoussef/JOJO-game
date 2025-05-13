@@ -15,11 +15,11 @@ class Player extends Movable(Minion) {
         this.frameCount = {
             'IDLE': 1,
             'CROUCH': 2,
-            'BLOCK': 1,
+            'BLOCK': 3,
             'PUNCH': 4,
             'KICK': 2,
             'THROW': 2,
-            'JUMP': 2,
+            'JUMP': 5,
         };
     }
 
@@ -39,7 +39,7 @@ class Player extends Movable(Minion) {
         this.frameIndex = 0;
         this.frameDelay = this.actionTimer / this.frameCount[this.action];
         this.frameTimer = this.frameDelay;
-        const attack = new Projectile(this.x, this.y, this.width*2/3, this.height, this.velocityX*2);
+        const attack = new Projectile(this.x, this.y, this.width*2/3, this.height/2, this.velocityX*2);
         attack.isFacingRight = this.isFacingRight;
         this.attacks.push(attack);
     }
@@ -47,6 +47,9 @@ class Player extends Movable(Minion) {
     block() {
         if (!this.isIdle()) return;
         this.action = 'BLOCK';
+        this.frameIndex = 0;
+        this.frameDelay = 20 / this.frameCount[this.action];
+        this.frameTimer = this.frameDelay;
     }
 
     kick(enemy, playSound) {
@@ -108,7 +111,7 @@ class Player extends Movable(Minion) {
      jump() {
         this.action = "JUMP";
         this.frameIndex = 0;
-        this.frameDelay = 20 / this.frameCount[this.action];
+        this.frameDelay = 30 / this.frameCount[this.action];
         this.frameTimer = this.frameDelay;
         if (this.isOnGround) {
             this.velocityY = this.jumpPower;

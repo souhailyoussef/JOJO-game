@@ -55,7 +55,7 @@ const drawHelper = {
             case 'MOVE_RIGHT':
                 return images.idle;
             case 'BLOCK':
-                return images.block;
+                return images[`block${frameIndex}`];
             case 'CROUCH':
                 return images.crouch;
             case 'KICK':

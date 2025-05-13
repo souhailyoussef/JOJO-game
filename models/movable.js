@@ -5,6 +5,7 @@ const Movable = Base => class extends Base {
         if (dx > 0) {
             if (this.isOnGround) this.action = "MOVE_RIGHT";
             this.isFacingRight = true;
+            this.action === 'JUMP'
         }
         if (dx < 0) {
             if (this.isOnGround) this.action = "MOVE_LEFT";

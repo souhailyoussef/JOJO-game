@@ -31,7 +31,7 @@ const soundManager = new SoundManager();
 // Load sounds
 soundManager.load('attack', './resources/soundeffects/ora.mp3');
 soundManager.load('kick', './resources/soundeffects/muda.mp3');
-soundManager.load('theme', './resources/soundEffects/background_theme.mp3');
+soundManager.load('theme', './resources/soundeffects/background_theme.mp3');
 
 const fighters = document.querySelectorAll('.fighter');
 
@@ -64,7 +64,10 @@ function init(assets) {
     setupCanvas();
     playerAssets = assets[selectedCharacters[0]];
     enemyAssets = assets[selectedCharacters[1]];
-    document.addEventListener('keydown', (e) => keys[e.code] = true);
+    document.addEventListener('keydown', (e) => {
+        if (e.repeat && e.code === 'KeyQ') return;
+        keys[e.code] = true;
+    });
     document.addEventListener('keyup', (e) => keys[e.code] = false);
     document.addEventListener('dmgTakenEvent', updateHP);
     requestAnimationFrame(update);
@@ -134,7 +137,7 @@ function handleMovement() {
     if (keys['KeyW']) {
         player.block(); 
     };
-    if (!keys['KeyW'] && !player.active()) {
+    if (!keys['KeyW'] && !player.active() && player.isOnGround) {
         player.setIdle();
     }
     if (keys['ArrowDown']) {
@@ -165,7 +168,7 @@ function handleAction() {
     }
 
     lastActionTime = currentTime;
-    if (keys['KeyQ'] && keys['ArrowDown'] && player.isOnGround) {
+    if (keys['KeyQ'] && keys['ArrowDown'] && player.isOnGround && player.action === 'CROUCH') {
         player.kick(enemy, () => soundManager.play('kick'));
     }
     else if (keys['KeyQ']) {
@@ -183,12 +186,12 @@ function moveAttack(attack) {
     let newX = attack.x + velocity;
 
     if (newX >= 0 && newX <= boardWidth - attack.width) {
-        if (isColliding(attack, enemy) && enemy.action !== 'BLOCK') {
+        if (isAttackLanded(attack, enemy) && enemy.action !== 'BLOCK') {
             console.log('attack landed');
             enemy.takeHit(attack);
             return null;
         } 
-        if (isColliding(attack, enemy) && enemy.action === 'BLOCK') {
+        if (isAttackLanded(attack, enemy) && enemy.action === 'BLOCK') {
             console.log('attack blocked');
             return null;
         }
@@ -205,6 +208,12 @@ function isColliding(player, enemy){
     return ox && oy;
 }
 
+function isAttackLanded(attack, enemy) {
+    const overlapX = attack.x >= enemy.x && attack.x <= enemy.x + enemy.width;
+    const overlapY = attack.y >= enemy.y && attack.y <= enemy.y + enemy.height;
+    return overlapX && overlapY;
+}
+
 function isInBounds(player, right) {
     if (right) return player.x + playerVelocityX <= boardWidth - player.width;
     return player.x - playerVelocityX >=0;
@@ -214,7 +223,7 @@ function updateEntity(entity) {
     if (entity.actionTimer > 0) {
         entity.actionTimer--;
     }
-    if (entity.actionTimer == 0 && entity.action !== 'CROUCH' && entity.action !== 'BLOCK') entity.setIdle();
+    if (entity.actionTimer == 0 && entity.action !== 'CROUCH' && entity.action !== 'BLOCK' && entity.isOnGround) entity.setIdle();
     entity.frameTimer--;
     if (entity.frameTimer <= 0) {
         entity.frameIndex = (entity.frameIndex + 1) % entity.frameCount[entity.action];
