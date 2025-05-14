@@ -138,6 +138,9 @@ function handleMovement() {
     if (keys['KeyW']) {
         player.block(); 
     };
+    if (keys['KeyL']) {
+        enemy.block(); 
+    };
     if (!keys['KeyW'] && !player.active() && player.isOnGround) {
         player.setIdle();
     }
@@ -181,6 +184,10 @@ function handleAction() {
     else if (keys['KeyQ']) {
         keys['KeyW'] = false;
         player.punch(enemy, () => soundManager.play('attack'));
+    }
+    if (keys['KeyM']) {
+        keys['KeyL'] = false;
+        enemy.punch(player, () => soundManager.play('attack'));
     }
     if (keys['KeyE']) {
         keys['KeyW'] = false;
@@ -238,7 +245,7 @@ function updateEntity(entity) {
     if (entity.actionTimer == 0 && entity.action !== 'CROUCH' && entity.action !== 'BLOCK' && entity.isOnGround) entity.setIdle();
     entity.frameTimer--;
     if (entity.frameTimer <= 0) {
-        
+
         const frameName = entity.action + entity.actionVariation;
         entity.frameIndex = (entity.frameIndex + 1) % entity.frameCount[frameName];
         entity.frameTimer = entity.frameDelay;
