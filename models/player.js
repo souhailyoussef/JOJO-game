@@ -11,24 +11,26 @@ class Player extends Movable(Minion) {
         this.ammo = 5;
         this.ammoReload = 10000;
         this.id = id;
+        this.actionVariation=1; 
         this.actionTimer= 0;
         this.frameIndex = 0;
         this.frameTimer = 0;
         this.frameDelay = 5;
         this.frameCount = {
             'IDLE': 1,
-            'CROUCH': 2,
+            'CROUCH': 1,
             'BLOCK': 3,
-            'PUNCH': 4,
+            'PUNCH': 3,
             'KICK': 2,
             'THROW': 2,
-            'JUMP': 5,
+            'JUMP': 2,
         };
     }
 
     setIdle() {
         this.action = 'IDLE';
         this.height = this.originalHeight;
+        this.frameIndex = 0;
     }
 
     active() {
@@ -84,6 +86,8 @@ class Player extends Movable(Minion) {
     punch(enemy, callback) {
        if (!this.isOnGround) return;
        if (this.actionTimer > 0) return;
+       const punchVariants = [1, 2, 3];
+       this.actionVariation = punchVariants[Math.floor(Math.random() * punchVariants.length)];
        this.action = 'PUNCH';
        this.actionTimer = 20;
        this.frameIndex = 0;

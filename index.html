@@ -12,8 +12,10 @@
             <h1>JOJO Street Fighter</h1>
             <div class="container">
                 <div class="player1">
-                    <h5 class="name"></h5>
-                    <img src="" alt="player1">
+                    <div>
+                        <h5 class="name"></h5>
+                        <img src="" alt="player1">
+                    </div>
                     <div class="stats">
                         <span>power</span>
                         <div class="power">
@@ -41,12 +43,15 @@
                             <td class="fighter joseph" fighter="joseph"></td>
                         </tr>
                     </table>
+                    <button id="start" disabled type="button">Start</button>
                 </div>
                 <div class="player2">
-                    <h5 class="name"></h5>
-                    <img src="" alt="player2">
+                    <div>
+                        <h5 class="name"></h5>
+                        <img src="" alt="player2">
+                    </div>
                     <div class="stats" style="text-align: right;">
-                         <span>power</span>
+                        <span>power</span>
                         <div class="power">
                         </div>
                         <span>speed</span>
@@ -58,15 +63,6 @@
                     </div>
                     </div>
             </div>
-            <!-- <table>
-                <tr><th colspan="4">Select your stand</th></tr>
-                <tr>
-                    <td class="fighter jotaro" fighter="jotaro"></td>
-                    <td class="fighter dio" fighter="dio"></td>
-                    <td class="fighter kakyoin" fighter="kakyoin"></td>
-                    <td class="fighter joseph" fighter="joseph"></td>
-                </tr>
-            </table> -->
     </div>
     <canvas hidden id="board"></canvas>
     <script src="./drawHelper.js"></script>

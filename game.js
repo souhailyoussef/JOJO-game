@@ -41,41 +41,26 @@ fetch('./characters.json')
 const fighters = document.querySelectorAll('.fighter');
 const player1Container = document.querySelector('.player1');
 const player2Container = document.querySelector('.player2');
+const startBtn = document.getElementById('start');
 
+
+let selectedFighter1 = document.querySelector('.fighter[hover1]');
+let selectedFighter2 = document.querySelector('.fighter[hover2]');
+let currentSelectingPlayer = 1;
 
 fighters.forEach(fighter => {
-
     fighter.addEventListener('click', function() {
-        console.log(characters);
-        const fighterName = this.getAttribute('fighter');
-        const fighter1State = characters.get(fighterName);
-        const fighter2State = characters.get(fighterName)
-        player1Container.querySelector('img').setAttribute('src', `./resources/${fighterName}/full_portrait.webp`);
-        player1Container.querySelector('.name').textContent = fighterName;
-        setStars(player1Container.querySelector('.power'), fighter1State.power);
-        setStars(player1Container.querySelector('.speed'), fighter1State.speed);
-        setStars(player1Container.querySelector('.range'), fighter1State.range);
-        player2Container.querySelector('img').setAttribute('src', `./resources/${fighterName}/full_portrait.webp`);
-        player2Container.querySelector('.name').textContent = fighterName;
-        setStars(player2Container.querySelector('.power'), fighter2State.power);
-        setStars(player2Container.querySelector('.speed'), fighter2State.speed);
-        setStars(player2Container.querySelector('.range'), fighter2State.range);
-        soundManager.play('theme2');
-        selectedCharacters  = [fighterName, 'jotaro'];
-        loadCharacterAssets(selectedCharacters, function(assets) {
-            init(assets);
-        })
+        handlePlayerSelection(currentSelectingPlayer, fighter);
+        currentSelectingPlayer++;
     })
 })
-document.getElementById('startBtn').addEventListener('click', () => {
-    document.getElementById('startBtn').style.display = 'none';
 
-    selectedCharacters = ['jotaro', 'dio'];
-
+startBtn.addEventListener('click', (e) => {
+    startBtn.disabled = true;
+    soundManager.play('theme2');
     loadCharacterAssets(selectedCharacters, function(assets) {
         init(assets);
     });
-
 });
 
 
@@ -152,7 +137,7 @@ function handleMovement() {
     if (keys['KeyW']) {
         player.block(); 
     };
-    if (!keys['KeyW'] && !player.active() && player.isOnGround && player.action !== 'SPECIAL_ATTACK') {
+    if (!keys['KeyW'] && !player.active() && player.isOnGround) {
         player.setIdle();
     }
     if (keys['ArrowDown']) {
@@ -290,4 +275,34 @@ function setStars(element, value) {
     star.style.height = '35px';
     element.appendChild(star);
   }
+}
+
+function handlePlayerSelection(currentPlayer, fighter) {
+    if (currentPlayer === 1) {
+        if (selectedFighter1) selectedFighter1.removeAttribute('hover1');
+        selectedFighter1 = fighter;
+        const fighterName = fighter.getAttribute('fighter');
+        fighter.setAttribute('hover1', true);
+        const fighter1State = characters.get(fighterName);
+        player1Container.querySelector('img').setAttribute('src', `./resources/${fighterName}/full_portrait.webp`);
+        player1Container.querySelector('.name').textContent = fighterName;
+        setStars(player1Container.querySelector('.power'), fighter1State.power);
+        setStars(player1Container.querySelector('.speed'), fighter1State.speed);
+        setStars(player1Container.querySelector('.range'), fighter1State.range);
+        selectedCharacters[0] = fighterName;
+    } else {
+        if (selectedFighter2) selectedFighter2.removeAttribute('hover2');
+        selectedFighter2 = fighter;
+        const fighterName = fighter.getAttribute('fighter');
+        fighter.setAttribute('hover2', true);
+        const fighter2State = characters.get(fighterName)
+        player2Container.querySelector('img').setAttribute('src', `./resources/${fighterName}/full_portrait.webp`);
+        player2Container.querySelector('.name').textContent = fighterName;
+        setStars(player2Container.querySelector('.power'), fighter2State.power);
+        setStars(player2Container.querySelector('.speed'), fighter2State.speed);
+        setStars(player2Container.querySelector('.range'), fighter2State.range);
+        selectedCharacters[1] = fighterName;
+        startBtn.removeAttribute('disabled');
+    }
+
 }

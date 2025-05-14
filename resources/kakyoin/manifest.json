@@ -1,0 +1,11 @@
+{
+    "idle": 1,
+    "crouch": 1,
+    "kick": 2,
+    "punch1": 4,
+    "punch2": 10,
+    "block": 3,
+    "jump": 8,
+    "throw": 2,
+    "projectile": 1
+}
