@@ -16,20 +16,29 @@ class Player extends Movable(Minion) {
         this.frameIndex = 0;
         this.frameTimer = 0;
         this.frameDelay = 5;
-        this.frameCount = {
-            'IDLE': 1,
-            'CROUCH': 1,
-            'BLOCK': 3,
-            'PUNCH': 3,
-            'KICK': 2,
-            'THROW': 2,
-            'JUMP': 2,
-        };
+        this.frameCount = {};
+    }
+
+    setFrameCount(frameCount) {
+        this.frameCount = frameCount;
+        this.punchVariations = 0;
+        this.kickVariations = 0;
+        this.throwVariations = 0;
+        for (const action in frameCount) {
+            if (action.includes('PUNCH')) {
+                this.punchVariations++
+            } else if (action.includes('KICK')) {
+                this.kickVariations++;
+            } else if (action.includes('THROW')) {
+                this.throwVariations++;
+            }
+        }
     }
 
     setIdle() {
         this.action = 'IDLE';
         this.height = this.originalHeight;
+        this.actionVariation = 1;
         this.frameIndex = 0;
     }
 
@@ -40,10 +49,13 @@ class Player extends Movable(Minion) {
     attack() {
         if (this.actionTimer > 0) return;
         if (this.ammo === 0) return;
+        
         this.action = 'THROW';
+        this.actionVariation = Math.floor(Math.random()*this.kickVariations) + 1;
+        const frameName = this.action + this.throwVariations;
         this.actionTimer = 10;
         this.frameIndex = 0;
-        this.frameDelay = this.actionTimer / this.frameCount[this.action];
+        this.frameDelay = this.actionTimer / this.frameCount[frameName];
         this.frameTimer = this.frameDelay;
         const attack = new Projectile(this.x, this.y, this.width*2/3, this.height/2, this.velocityX*2);
         attack.isFacingRight = this.isFacingRight;
@@ -61,6 +73,7 @@ class Player extends Movable(Minion) {
     block() {
         if (!this.isIdle()) return;
         this.action = 'BLOCK';
+        this.actionVariation = 1;
         this.frameIndex = 0;
         this.frameDelay = 20 / this.frameCount[this.action];
         this.frameTimer = this.frameDelay;
@@ -69,10 +82,12 @@ class Player extends Movable(Minion) {
     kick(enemy, playSound) {
         if (!this.isOnGround) return;
         if (this.actionTimer > 0) return;
+
         this.action = 'KICK';
+        const frameName = this.action + this.kickVariations;
         this.actionTimer = 20;
         this.frameIndex = 0;
-        this.frameDelay = this.actionTimer / this.frameCount[this.action];
+        this.frameDelay = this.actionTimer / this.frameCount[frameName];
         this.frameTimer = this.frameDelay;
         const attack = new Attack(this.x, this.y/2, this.width, this.height / 2, 0, 'kick');
         if (this.isKickLanded(enemy)) {
@@ -86,12 +101,13 @@ class Player extends Movable(Minion) {
     punch(enemy, callback) {
        if (!this.isOnGround) return;
        if (this.actionTimer > 0) return;
-       const punchVariants = [1, 2, 3];
-       this.actionVariation = punchVariants[Math.floor(Math.random() * punchVariants.length)];
+
        this.action = 'PUNCH';
+       this.actionVariation = Math.floor(Math.random()*this.punchVariations) + 1;
+       const frameName = this.action + this.punchVariations;
        this.actionTimer = 20;
        this.frameIndex = 0;
-       this.frameDelay = this.actionTimer / this.frameCount[this.action];
+       this.frameDelay = this.actionTimer / this.frameCount[frameName];
        this.frameTimer = this.frameDelay;
        const attack = new Attack(this.x, this.y, this.punchRange, this.height, 0, 'punch');
        if (this.isPunchLanded(enemy)) {
@@ -137,6 +153,7 @@ class Player extends Movable(Minion) {
 
      jump() {
         this.action = "JUMP";
+        this.actionVariation = 1;
         this.frameIndex = 0;
         this.frameDelay = 30 / this.frameCount[this.action];
         this.frameTimer = this.frameDelay;

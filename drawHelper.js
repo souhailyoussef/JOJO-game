@@ -45,7 +45,7 @@ const drawHelper = {
         } else {
             ctx.translate(entity.x, entity.y);
         }
-        const image = drawHelper.getImageForAction('PROJECTILE', imgs);
+        const image = drawHelper.getImageForAction('PROJECTILE', imgs, 0, 1);
         ctx.drawImage(image, 0, 0, entity.width, entity.height);
         ctx.restore();
     },
@@ -53,25 +53,25 @@ const drawHelper = {
         switch (action) {
             case 'MOVE_LEFT':
             case 'MOVE_RIGHT':
-                return images.idle[frameIndex];
+                return images[`idle${actionVariation}`][frameIndex];
             case 'BLOCK':
-                return images.block[frameIndex];
+                return images[`block${actionVariation}`][frameIndex];
             case 'CROUCH':
-                return images.crouch[frameIndex];
+                return images[`crouch${actionVariation}`][frameIndex];
             case 'KICK':
-                return images.kick[frameIndex];
+                return images[`kick${actionVariation}`][frameIndex];
             case 'PUNCH': 
                 return images[`punch${actionVariation}`][frameIndex];
             case 'JUMP':
-                return images.jump[frameIndex];     
+                return images[`jump${actionVariation}`][frameIndex];
             case 'THROW': 
-                return images.throw[frameIndex];  
+                return images[`throw${actionVariation}`][frameIndex];
             case 'PROJECTILE':
                 return images.projectile[frameIndex];   
             case 'SPECIAL_ATTACK':
                 return images.specialAttack;          
             default:
-                return images.idle[frameIndex];        
+                return images[`idle${actionVariation}`][frameIndex];
         }
     }
 }

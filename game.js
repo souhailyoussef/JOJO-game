@@ -70,13 +70,14 @@ function init(assets) {
     setupCanvas();
     playerAssets = assets[selectedCharacters[0]];
     enemyAssets = assets[selectedCharacters[1]];
+    setFrameCounts(assets);
     document.addEventListener('keydown', (e) => {
         if (e.repeat && e.code === 'KeyQ') return;
         keys[e.code] = true;
     });
     document.addEventListener('keyup', (e) => keys[e.code] = false);
-    document.addEventListener('dmgTakenEvent', updateHP);
-    document.addEventListener('manaRechargeEvent', updateMana);
+    //document.addEventListener('dmgTakenEvent', updateHP);
+    //document.addEventListener('manaRechargeEvent', updateMana);
     requestAnimationFrame(update);
 
 }
@@ -237,7 +238,9 @@ function updateEntity(entity) {
     if (entity.actionTimer == 0 && entity.action !== 'CROUCH' && entity.action !== 'BLOCK' && entity.isOnGround) entity.setIdle();
     entity.frameTimer--;
     if (entity.frameTimer <= 0) {
-        entity.frameIndex = (entity.frameIndex + 1) % entity.frameCount[entity.action];
+        
+        const frameName = entity.action + entity.actionVariation;
+        entity.frameIndex = (entity.frameIndex + 1) % entity.frameCount[frameName];
         entity.frameTimer = entity.frameDelay;
     }
 }
@@ -305,4 +308,20 @@ function handlePlayerSelection(currentPlayer, fighter) {
         startBtn.removeAttribute('disabled');
     }
 
+}
+
+function setFrameCounts(assets) {
+
+    const player1 = selectedCharacters[0];
+    const player2 = selectedCharacters[1];
+    let frameCount = {};
+    for (const [key, value] of Object.entries(assets[player1])) {
+        frameCount[key.toUpperCase()] = value.length;
+    }
+    player.setFrameCount(frameCount);
+    frameCount = {}
+     for (const [key, value] of Object.entries(assets[player2])) {
+        frameCount[key.toUpperCase()] = value.length;
+    }
+    enemy.setFrameCount(frameCount);
 }

@@ -1,12 +1,12 @@
 {
-    "idle": 1,
-    "crouch": 1,
-    "kick": 2,
+    "idle1": 1,
+    "crouch1": 1,
+    "kick1": 2,
     "punch1": 4,
     "punch2": 10,
     "punch3": 3,
-    "block": 3,
-    "jump": 2,
-    "throw": 2,
+    "block1": 3,
+    "jump1": 2,
+    "throw1": 2,
     "projectile": 1
 }
