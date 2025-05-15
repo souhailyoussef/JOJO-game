@@ -14,12 +14,16 @@ const attackVelocityX = TILE_SIZE;
 
 let playerAssets, enemyAssets;
 
-let board, context;
-let player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
-let enemy = new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
+let context;
+let player; new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
+let enemy; new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
+let menu = document.getElementById('menu');
+let board = document.getElementById('board');
+
 
 let selectedCharacters = [];
 const keys = {};
+let gameEnded = false;
 
 const soundManager = new SoundManager();
 
@@ -67,6 +71,11 @@ startBtn.addEventListener('click', (e) => {
 
 
 function init(assets) {
+    player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
+    enemy= new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
+    menu.style.display = 'none';
+    board.style.display = 'block';
+    gameEnded = false;
     setupCanvas();
     playerAssets = assets[selectedCharacters[0]];
     enemyAssets = assets[selectedCharacters[1]];
@@ -76,14 +85,11 @@ function init(assets) {
         keys[e.code] = true;
     });
     document.addEventListener('keyup', (e) => keys[e.code] = false);
-    //document.addEventListener('dmgTakenEvent', updateHP);
-    //document.addEventListener('manaRechargeEvent', updateMana);
     requestAnimationFrame(update);
 
 }
 
 function setupCanvas() {
-    board = document.getElementById('board');
     board.hidden = false;
     board.width = boardWidth;
     board.height = boardHeight;
@@ -93,6 +99,12 @@ function setupCanvas() {
 
 /** GAME LOOP */
 function update() {
+    if (gameEnded) {
+        menu.style.display = 'block';
+        board.style.display = 'none';
+        return;
+    }
+    detectEndGame();
     requestAnimationFrame(update);
 
     context.clearRect(0,0, boardWidth, boardHeight);
@@ -109,6 +121,9 @@ function update() {
     enemy.attacks.forEach(p => drawHelper.drawProjectile(context, p, playerAssets));
 
     handleAction();
+    drawHelper.drawStats(context, player, {width: boardWidth, height: boardHeight}, true, playerAssets.portrait[0]);
+    drawHelper.drawStats(context, enemy, {width: boardWidth, height: boardHeight}, false, enemyAssets.portrait[0]);
+
 }
 
 function updateAttacks(player, enemy) {
@@ -169,7 +184,7 @@ function handleAction() {
 
     if (keys['KeyN']) {
         keys['KeyW'] = false;
-        player.speicalAttack(enemy);
+        player.specialAttack(enemy);
     }
     if (keys['KeyQ'] && keys['ArrowDown'] && player.isOnGround && player.action === 'CROUCH') {
         player.kick(enemy, () => soundManager.play('kick'));
@@ -256,25 +271,6 @@ function drawSpecialAttack() {
     console.log('drawing');
 }
 
-
-function updateHP(e) {
-    const target = e.detail.target;
-    const dmg = e.detail.dmg;
-    const hp = e.detail.hp;
-    if (target == 1) {
-        document.getElementById('player-health').innerText = hp;
-    } else document.getElementById('enemy-health').innerText = hp;
-}
-
-function updateMana(e) {
-    const target = e.detail.target;
-    const amount = e.detail.amount;
-    const mana = e.detail.mana;
-    if (target == 1) {
-        document.getElementById('player-mana').innerText = mana;
-    } else document.getElementById('enemy-mana').innerText = mana;
-}
-
 function setStars(element, value) {  
     element.textContent = '';
   for (let i = 0; i < value; i++) {
@@ -331,4 +327,8 @@ function setFrameCounts(assets) {
         frameCount[key.toUpperCase()] = value.length;
     }
     enemy.setFrameCount(frameCount);
+}
+
+function detectEndGame() {
+    if (player.hp <= 0 || enemy.hp <=0) gameEnded = true;
 }

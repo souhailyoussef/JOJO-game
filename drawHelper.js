@@ -49,6 +49,43 @@ const drawHelper = {
         ctx.drawImage(image, 0, 0, entity.width, entity.height);
         ctx.restore();
     },
+    drawStats: function (ctx, player, {width, height}, left, img) {
+        const LOGO_SIZE = 100;
+        const HP_BAR_HEIGHT = 30;
+        const MANA_BAR_HEIGHT = 20;
+
+        const maxBarWidth = width/2 - 200;
+        const hpBarOffset = 0;
+        const manaBarOffset = 0;
+        const currentHPWidth = Math.max(0, (player.hp * maxBarWidth) / 100 - hpBarOffset);
+        const currentMANAWidth = Math.max(0, (player.mana * maxBarWidth) / 100 - manaBarOffset);
+    
+        let hpX, manaX, imgX;
+        if (left) {
+            hpX = width - currentHPWidth - LOGO_SIZE;
+            manaX = width - currentMANAWidth - LOGO_SIZE;
+            imgX = width - LOGO_SIZE;
+        } else {
+            hpX = LOGO_SIZE;
+            manaX = LOGO_SIZE;
+            imgX = 0;
+        }
+
+        // HP bar
+        ctx.fillStyle = 'green';
+        ctx.fillRect(hpX, 0, currentHPWidth, HP_BAR_HEIGHT);
+        this.addBorder(ctx, hpX, 0, currentHPWidth, HP_BAR_HEIGHT, 'black', 2);
+
+        // Mana bar
+        ctx.fillStyle = 'royalblue';
+        ctx.fillRect(manaX, HP_BAR_HEIGHT, currentMANAWidth, MANA_BAR_HEIGHT);
+        this.addBorder(ctx, manaX, HP_BAR_HEIGHT, currentMANAWidth, MANA_BAR_HEIGHT, 'black', 2);
+
+        // Draw logo and border
+        ctx.drawImage(img, imgX, 0, LOGO_SIZE, LOGO_SIZE);
+        this.addBorder(ctx, imgX, 0, LOGO_SIZE, LOGO_SIZE, 'gold', 3);
+
+    },
     getImageForAction: function(action, images, frameIndex = 0, actionVariation = 1) {
         switch (action) {
             case 'MOVE_LEFT':
@@ -73,5 +110,10 @@ const drawHelper = {
             default:
                 return images[`idle${actionVariation}`][frameIndex];
         }
+    },
+    addBorder: function (ctx, x,y, width, height, color, borderWidth) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = borderWidth;
+        ctx.strokeRect(x, y, width, height);
     }
 }

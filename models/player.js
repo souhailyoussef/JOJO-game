@@ -180,5 +180,9 @@ class Player extends Movable(Minion) {
         }
         this.height = this.originalHeight;
     }
+
+    specialAttack() {
+        this.incrementMana(-100);
+    }
     
 }

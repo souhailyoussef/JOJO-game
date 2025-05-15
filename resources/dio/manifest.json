@@ -8,5 +8,6 @@
     "block1": 2,
     "jump1": 1,
     "throw1": 1,
-    "projectile": 1
+    "projectile": 1,
+    "portrait": 1
 }
