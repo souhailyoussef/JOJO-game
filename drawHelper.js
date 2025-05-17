@@ -57,8 +57,8 @@ const drawHelper = {
         const maxBarWidth = width/2 - 200;
         const hpBarOffset = 0;
         const manaBarOffset = 0;
-        const currentHPWidth = Math.max(0, (player.hp * maxBarWidth) / 100 - hpBarOffset);
-        const currentMANAWidth = Math.max(0, (player.mana * maxBarWidth) / 100 - manaBarOffset);
+        const currentHPWidth = Math.max(0, (player.hp * maxBarWidth) / 200 - hpBarOffset);
+        const currentMANAWidth = Math.max(0, (player.mana * maxBarWidth) / 200 - manaBarOffset);
     
         let hpX, manaX, imgX;
         if (left) {
@@ -104,7 +104,9 @@ const drawHelper = {
             case 'THROW': 
                 return images[`throw${actionVariation}`][frameIndex];
             case 'PROJECTILE':
-                return images.projectile[frameIndex];   
+                return images.projectile[frameIndex];
+            case 'HURT': 
+                return images[`hurt${actionVariation}`][frameIndex];       
             case 'SPECIAL_ATTACK':
                 return images.specialAttack;          
             default:

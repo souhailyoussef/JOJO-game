@@ -25,6 +25,28 @@ let selectedCharacters = [];
 const keys = {};
 let gameEnded = false;
 
+const KEY_BINDINGS = {
+    PLAYER_1 : {
+        ATTACK: 'KeyQ',
+        BLOCK: 'KeyW',
+        THROW: 'KeyE',
+        UP: 'Space',
+        DOWN: 'ArrowDown',
+        LEFT: 'ArrowLeft',
+        RIGHT: 'ArrowRight'
+    },
+    PLAYER_2: {
+        ATTACK: 'KeyO',
+        BLOCK: 'KeyP',
+        THROW: 'KeyI',
+        UP: 'Numpad8',
+        DOWN: 'Numpad5',
+        LEFT: 'Numpad4',
+        RIGHT: 'Numpad6'
+    }
+
+}
+
 const soundManager = new SoundManager();
 
 // Load sounds
@@ -149,35 +171,23 @@ function updateAttacks(player, enemy) {
 }
 
 function handleMovement() {
-    if (!keys['ArrowDown'] && !player.active()) player.uncrouch();
-    if (keys['KeyW']) {
-        player.block(); 
-    };
-    if (keys['KeyL']) {
-        enemy.block(); 
-    };
-    if (!keys['KeyW'] && !player.active() && player.isOnGround) {
+    if (released(KEY_BINDINGS.PLAYER_1.BLOCK) && !player.active() && player.isOnGround) {
         player.setIdle();
     }
-    if (keys['ArrowDown']) {
-        player.crouch(); 
+    if (released(KEY_BINDINGS.PLAYER_2.BLOCK) && !enemy.active() && enemy.isOnGround) {
+        enemy.setIdle();
     }
-    if (keys['Numpad5']) {
-        enemy.crouch(); 
-    }
-    if (!keys['Numpad5'] && !enemy.active()) enemy.uncrouch();
-    if (keys['ArrowLeft'] && isInBounds(player, false)) {
-        if (isColliding(player, enemy) && player.x >= enemy.x) return;
-        if (player.actionTimer > 0) return;
-        player.move(-playerVelocityX,0);
-    } 
-    if (keys['ArrowRight'] && isInBounds(player, true)) {
-        if (isColliding(player, enemy) && player.x <= enemy.x) return;
-        if (player.actionTimer > 0) return;
-        player.move(playerVelocityX, 0);
-    } 
-    if (keys['Space']) player.jump();
-    if (keys['Numpad8']) enemy.jump();
+    handleBlockLogic(player, KEY_BINDINGS.PLAYER_1.BLOCK);
+    handleBlockLogic(enemy, KEY_BINDINGS.PLAYER_2.BLOCK);
+
+    handleCrouchLogic(player, KEY_BINDINGS.PLAYER_1.DOWN);
+    handleCrouchLogic(enemy, KEY_BINDINGS.PLAYER_2.DOWN);
+    handleMoveHoriz(player, KEY_BINDINGS.PLAYER_1.LEFT, enemy, true);
+    handleMoveHoriz(player, KEY_BINDINGS.PLAYER_1.RIGHT, enemy, false);
+    handleMoveHoriz(enemy, KEY_BINDINGS.PLAYER_2.LEFT, player, true);
+    handleMoveHoriz(enemy, KEY_BINDINGS.PLAYER_2.RIGHT, player, false);
+    handleJump(player, KEY_BINDINGS.PLAYER_1.UP);
+    handleJump(enemy, KEY_BINDINGS.PLAYER_2.UP);
 }
 
 function handleAction() {
@@ -186,32 +196,10 @@ function handleAction() {
         keys['KeyW'] = false;
         player.specialAttack(enemy);
     }
-    if (keys['KeyQ'] && keys['ArrowDown'] && player.isOnGround && player.action === 'CROUCH') {
-        player.kick(enemy, () => soundManager.play('kick'));
-    }
-    else if (keys['KeyQ']) {
-        keys['KeyW'] = false;
-        player.punch(enemy, () => soundManager.play('attack'));
-    }
-    if (keys['KeyP'] && keys['Numpad5'] && enemy.isOnGround && enemy.action === 'CROUCH') {
-        enemy.kick(player, () => soundManager.play('kick'));
-    }
-    else if (keys['KeyQ']) {
-        keys['KeyW'] = false;
-        player.punch(enemy, () => soundManager.play('attack'));
-    }
-    if (keys['KeyM']) {
-        keys['KeyL'] = false;
-        enemy.punch(player, () => soundManager.play('attack'));
-    }
-    if (keys['KeyE']) {
-        keys['KeyW'] = false;
-        player.attack();
-    }
-    if (keys['KeyO']) {
-        keys['Keyl'] = false;
-        enemy.attack();
-    }
+    handleAttack(player, KEY_BINDINGS.PLAYER_1.ATTACK, KEY_BINDINGS.PLAYER_1.DOWN, KEY_BINDINGS.PLAYER_1.BLOCK, enemy);
+    handleAttack(enemy, KEY_BINDINGS.PLAYER_2.ATTACK, KEY_BINDINGS.PLAYER_2.DOWN, KEY_BINDINGS.PLAYER_2.BLOCK, player);
+    handleThrow(player, KEY_BINDINGS.PLAYER_1.THROW, KEY_BINDINGS.PLAYER_1.BLOCK);
+    handleThrow(enemy, KEY_BINDINGS.PLAYER_2.THROW, KEY_BINDINGS.PLAYER_2.BLOCK);
     
 }
 
@@ -331,4 +319,60 @@ function setFrameCounts(assets) {
 
 function detectEndGame() {
     if (player.hp <= 0 || enemy.hp <=0) gameEnded = true;
+}
+
+/** HELPER **/
+
+const pressed   = code => keys[code];
+const released  = code => !keys[code];
+const release = code => keys[code] = false;
+
+function handleCrouchLogic(actor, keyBinding) {
+    if (released(keyBinding) && !actor.active()) actor.uncrouch();
+    if (pressed(keyBinding)) actor.crouch();
+}
+
+function handleBlockLogic(actor, keyBinding) {
+    if (pressed(keyBinding)) actor.block();
+}
+
+function handleMoveHoriz(actor, keyBinding, target, left) {
+    if (left && pressed(keyBinding) && isInBounds(actor, false)) {
+        if (isColliding(actor, target) && actor.x >= target.x) return;
+        if (actor.actionTimer > 0) return;
+        actor.move(-playerVelocityX, 0);
+    }
+    else if (pressed(keyBinding) && isInBounds(actor, true)) {
+        if (isColliding(actor, target) && actor.x <= target.x) return;
+        if (actor.actionTimer > 0) return;
+        actor.move(playerVelocityX, 0);
+    }
+    
+}
+
+function handleJump(actor, keyBinding) {
+    if (pressed(keyBinding)) actor.jump();
+}
+
+function cancelBlock(keyBinding) {
+    keys[keyBinding] = false;
+}
+
+function handleAttack(actor, keyBinding1, keyBinding2, keyBinding3, target) {
+    if (pressed(keyBinding1) && pressed(keyBinding2) && actor.isOnGround && actor.action === 'CROUCH') {
+        actor.kick(target, () => soundManager.play('kick'));
+        return;
+    }
+    if (pressed(keyBinding1)) {
+        cancelBlock(keyBinding3);
+        actor.punch(target, () => soundManager.play('attack'));
+        return;
+    }
+}
+
+function handleThrow(actor, keyBinding1, keyBinding2) {
+    if (pressed(keyBinding1)) {
+        release(keyBinding2);
+        actor.attack();
+    }
 }

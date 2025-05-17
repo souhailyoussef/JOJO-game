@@ -2,11 +2,13 @@
     "idle1": 1,
     "crouch1": 1,
     "kick1": 2,
-    "punch1": 4,
-    "punch2": 10,
-    "block1": 3,
+    "punch1": 3,
+    "punch2": 3,
+    "punch3": 4,
+    "block1": 1,
     "jump1": 8,
-    "throw1": 2,
+    "throw1": 5,
     "projectile": 1,
-    "portrait": 1
+    "portrait": 1,
+    "hurt1": 4
 }

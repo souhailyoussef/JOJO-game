@@ -5,9 +5,10 @@
     "punch1": 4,
     "punch2": 10,
     "punch3": 3,
-    "block1": 3,
+    "block1": 1,
     "jump1": 2,
     "throw1": 2,
     "projectile": 1,
-    "portrait": 1
+    "portrait": 1,
+    "hurt1": 4
 }
