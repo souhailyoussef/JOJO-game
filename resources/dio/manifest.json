@@ -10,5 +10,6 @@
     "throw1": 1,
     "projectile": 1,
     "portrait": 1,
-    "hurt1": 4
+    "hurt1": 4,
+    "object": 1
 }

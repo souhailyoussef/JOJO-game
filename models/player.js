@@ -1,4 +1,5 @@
 class Player extends Movable(Minion) {
+    static MAX_MANA = 100;
     constructor(x, y, width, height, velocityX, id, punchRange, punchDmg, kickRange, kickDmg, ammo, projectileDmg, reloadTime) {
         super(x,y,width,height);
         this.velocityX = velocityX;
@@ -9,7 +10,7 @@ class Player extends Movable(Minion) {
         this.kickDmg = kickDmg;
         this.punchRange = punchRange;
         this.punchDmg = punchDmg;
-        this.mana = 40;
+        this.mana = 100;
         this.ammo = ammo;
         this.projectileDmg = projectileDmg;
         this.ammoReload = reloadTime;
@@ -108,7 +109,7 @@ class Player extends Movable(Minion) {
        this.action = 'PUNCH';
        this.actionVariation = Math.floor(Math.random()*this.punchVariations) + 1;
        const frameName = this.action + this.punchVariations;
-       this.actionTimer = 20;
+       this.actionTimer = 30;
        this.frameIndex = 0;
        this.frameDelay = this.actionTimer / this.frameCount[frameName];
        this.frameTimer = this.frameDelay;
@@ -123,7 +124,7 @@ class Player extends Movable(Minion) {
 
     incrementMana(amount) {
         this.mana += amount;
-        this.mana = Math.max(Math.min(this.mana, 100),0);
+        this.mana = Math.max(Math.min(this.mana, Player.MAX_MANA),0);
         const manaRechargeEvent = new CustomEvent('manaRechargeEvent', {
             detail: { target: this.id, mana: this.mana, amount}
         });
@@ -147,7 +148,7 @@ class Player extends Movable(Minion) {
     takeHit(attack) {
         if (this.action === 'BLOCK') return;
         this.action = 'HURT';
-        this.actionTimer = 10;
+        this.actionTimer = 20;
         this.actionVariation = 1;
         const frameName = this.action + this.actionVariation;
         this.frameIndex = 0;
@@ -190,8 +191,11 @@ class Player extends Movable(Minion) {
         this.height = this.originalHeight;
     }
 
-    specialAttack() {
-        this.incrementMana(-100);
+    useStand() {
+        if (this.mana < Player.MAX_MANA) return;
+        this.incrementMana(-Player.MAX_MANA);
     }
+
+
     
 }

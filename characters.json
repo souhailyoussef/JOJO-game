@@ -4,75 +4,51 @@
         "power": 4,
         "speed": 4,
         "range": 2,
-        "punch": {
-            "range": 200,
-            "dmg": 30
-        },
-        "kick": {
-            "range": 250,
-            "dmg": 20
-        },
-        "throw": {
-            "dmg": 10,
-            "ammo": 3,
-            "reloadTime": 10000
-        }
+        "punchDmg": 30,
+        "punchRange": 200,
+        "kickDmg": 20,
+        "kickRange": 250,
+        "projectileDmg": 10,
+        "ammo": 3,
+        "reloadTime": 10000
     },
     {
         "name": "dio",
         "power": 5,
         "speed": 4,
         "range": 2,
-        "punch": {
-            "range": 250,
-            "dmg": 25
-        },
-        "kick": {
-            "range": 300,
-            "dmg": 15
-        },
-        "throw": {
-            "dmg": 10,
-            "ammo": 3,
-            "reloadTime": 10000
-        }
+        "punchDmg": 25,
+        "punchRange": 250,
+        "kickDmg": 15,
+        "kickRange": 300,
+        "projectileDmg": 10,
+        "ammo": 3,
+        "reloadTime": 10000
     },
     {
         "name": "kakyoin",
         "power": 3,
         "speed": 5,
         "range": 5,
-        "punch": {
-            "range": 250,
-            "dmg": 15
-        },
-        "kick": {
-            "range": 300,
-            "dmg": 10
-        },
-        "throw": {
-            "dmg": 15,
-            "ammo": 5,
-            "reloadTime": 10000
-        }
+        "punchDmg": 15,
+        "punchRange": 250,
+        "kickDmg": 10,
+        "kickRange": 300,
+        "projectileDmg": 15,
+        "ammo": 5,
+        "reloadTime": 10000
     },
     {
         "name": "joseph",
         "power": 4,
         "speed": 4,
         "range": 4,
-        "punch": {
-            "range": 200,
-            "dmg": 25
-        },
-        "kick": {
-            "range": 200,
-            "dmg": 20
-        },
-        "throw": {
-            "dmg": 20,
-            "ammo": 3,
-            "reloadTime": 10000
-        }
+        "punchDmg": 25,
+        "punchRange": 200,
+        "kickDmg": 20,
+        "kickRange": 200,
+        "projectileDmg": 20,
+        "ammo": 3,
+        "reloadTime": 10000
     }
 ]

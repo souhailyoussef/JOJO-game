@@ -106,11 +106,19 @@ const drawHelper = {
             case 'PROJECTILE':
                 return images.projectile[frameIndex];
             case 'HURT': 
-                return images[`hurt${actionVariation}`][frameIndex];       
-            case 'SPECIAL_ATTACK':
-                return images.specialAttack;          
+                return images[`hurt${actionVariation}`][frameIndex];              
             default:
                 return images[`idle${actionVariation}`][frameIndex];
+        }
+    },
+    drawObject: function (ctx, object,imgs) {
+        switch (object.type) {
+            case "roadRoller":
+                const image = imgs.object[0];
+                ctx.drawImage(image, object.x, object.y, object.width, object.height);
+                break;
+            default:
+                break;    
         }
     },
     addBorder: function (ctx, x,y, width, height, color, borderWidth) {

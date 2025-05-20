@@ -12,24 +12,30 @@ const attackVelocityX = TILE_SIZE;
 
 /** GAME VARIABLES */
 
-let playerAssets, enemyAssets;
-
 let context;
-let player; new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
-let enemy; new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
 let menu = document.getElementById('menu');
 let board = document.getElementById('board');
 
 
 let selectedCharacters = [];
 const keys = {};
-let gameEnded = false;
+const gameState = {
+    ended: false, 
+    paused: false,
+    player: null,
+    playerId: 0,
+    playerAssets: {},
+    enemy: null,
+    enemyId: 0,
+    enemyAssets: {}
+}
 
 const KEY_BINDINGS = {
     PLAYER_1 : {
         ATTACK: 'KeyQ',
         BLOCK: 'KeyW',
         THROW: 'KeyE',
+        STAND: 'KeyS',
         UP: 'Space',
         DOWN: 'ArrowDown',
         LEFT: 'ArrowLeft',
@@ -39,6 +45,7 @@ const KEY_BINDINGS = {
         ATTACK: 'KeyO',
         BLOCK: 'KeyP',
         THROW: 'KeyI',
+        STAND: 'KeyN',
         UP: 'Numpad8',
         DOWN: 'Numpad5',
         LEFT: 'Numpad4',
@@ -48,6 +55,8 @@ const KEY_BINDINGS = {
 }
 
 const soundManager = new SoundManager();
+
+let obstacle = new Obstacle();
 
 // Load sounds
 soundManager.load('attack', './resources/soundeffects/ora.mp3');
@@ -93,14 +102,21 @@ startBtn.addEventListener('click', (e) => {
 
 
 function init(assets) {
-    player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1);
-    enemy= new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2);
+    const character1 = characters.get(selectedCharacters[0]);
+    const character2 = characters.get(selectedCharacters[1]);
+    const player = new Player(boardWidth/2 - TILE_SIZE, boardHeight - TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, playerVelocityX, 1, character1.punchRange, character1.punchDmg, character1.kickRange, character1.kickDmg, character1.ammo, character1.projectileDmg, character1.reloadTime);
+    const enemy= new Player(boardWidth/2 - TILE_SIZE*6, boardHeight- TILE_SIZE*8, TILE_SIZE*4, TILE_SIZE*8, enemyVelocityX, 2, character2.punchRange, character2.punchDmg, character2.kickRange, character2.kickDmg, character2.ammo, character2.projectileDmg, character2.reloadTime);
+    
+    gameState.player = player;
+    gameState.playerId = 1;
+    gameState.enemy = enemy;
+    gameState.enemyId = 2;
     menu.style.display = 'none';
     board.style.display = 'block';
-    gameEnded = false;
+    gameState.gameEnded = false;
     setupCanvas();
-    playerAssets = assets[selectedCharacters[0]];
-    enemyAssets = assets[selectedCharacters[1]];
+    gameState.playerAssets = assets[selectedCharacters[0]];
+    gameState.enemyAssets = assets[selectedCharacters[1]];
     setFrameCounts(assets);
     document.addEventListener('keydown', (e) => {
         if (e.repeat && e.code === 'KeyQ') return;
@@ -121,30 +137,38 @@ function setupCanvas() {
 
 /** GAME LOOP */
 function update() {
-    if (gameEnded) {
+    context.clearRect(0,0, boardWidth, boardHeight);
+
+    if (gameState.gameEnded) {
         menu.style.display = 'block';
         board.style.display = 'none';
         return;
     }
-    detectEndGame();
-    requestAnimationFrame(update);
+    if (gameState.paused) {
+        drawStandAnimation(gameState.player, gameState.enemy, "ZA WARUDO");
+        requestAnimationFrame(update);
+    } else {
+        object = null;
+        detectEndGame();
+        requestAnimationFrame(update);
 
-    context.clearRect(0,0, boardWidth, boardHeight);
-    handleMovement();
-    updateEntity(player);
-    updateEntity(enemy);
-    updateAttacks(player, enemy);
-    player.applyPhysics(boardHeight);
-    enemy.applyPhysics(boardHeight);
+        handleMovement();
+        updateEntity(gameState.player);
+        updateEntity(gameState.enemy);
+        updateAttacks(gameState.player, gameState.enemy);
+        gameState.player.applyPhysics(boardHeight);
+        gameState.enemy.applyPhysics(boardHeight);
+    
+        drawHelper.drawCharacter(context, gameState.player, gameState.playerAssets);
+        drawHelper.drawCharacter(context, gameState.enemy, gameState.enemyAssets);
+        gameState.player.attacks.forEach(p => drawHelper.drawProjectile(context, p, gameState.playerAssets));
+        gameState.enemy.attacks.forEach(p => drawHelper.drawProjectile(context, p, gameState.playerAssets));
+    
+        handleAction();
+        drawHelper.drawStats(context, gameState.player, {width: boardWidth, height: boardHeight}, true, gameState.playerAssets.portrait[0]);
+        drawHelper.drawStats(context, gameState.enemy, {width: boardWidth, height: boardHeight}, false, gameState.enemyAssets.portrait[0]);
+    }
 
-    drawHelper.drawCharacter(context, player, playerAssets);
-    drawHelper.drawCharacter(context, enemy, enemyAssets);
-    player.attacks.forEach(p => drawHelper.drawProjectile(context, p, playerAssets));
-    enemy.attacks.forEach(p => drawHelper.drawProjectile(context, p, playerAssets));
-
-    handleAction();
-    drawHelper.drawStats(context, player, {width: boardWidth, height: boardHeight}, true, playerAssets.portrait[0]);
-    drawHelper.drawStats(context, enemy, {width: boardWidth, height: boardHeight}, false, enemyAssets.portrait[0]);
 
 }
 
@@ -171,35 +195,33 @@ function updateAttacks(player, enemy) {
 }
 
 function handleMovement() {
-    if (released(KEY_BINDINGS.PLAYER_1.BLOCK) && !player.active() && player.isOnGround) {
-        player.setIdle();
+    if (released(KEY_BINDINGS.PLAYER_1.BLOCK) && !gameState.player.active() && gameState.player.isOnGround) {
+        gameState.player.setIdle();
     }
-    if (released(KEY_BINDINGS.PLAYER_2.BLOCK) && !enemy.active() && enemy.isOnGround) {
-        enemy.setIdle();
+    if (released(KEY_BINDINGS.PLAYER_2.BLOCK) && !gameState.enemy.active() && gameState.enemy.isOnGround) {
+        gameState.enemy.setIdle();
     }
-    handleBlockLogic(player, KEY_BINDINGS.PLAYER_1.BLOCK);
-    handleBlockLogic(enemy, KEY_BINDINGS.PLAYER_2.BLOCK);
+    handleBlockLogic(gameState.player, KEY_BINDINGS.PLAYER_1.BLOCK);
+    handleBlockLogic(gameState.enemy, KEY_BINDINGS.PLAYER_2.BLOCK);
 
-    handleCrouchLogic(player, KEY_BINDINGS.PLAYER_1.DOWN);
-    handleCrouchLogic(enemy, KEY_BINDINGS.PLAYER_2.DOWN);
-    handleMoveHoriz(player, KEY_BINDINGS.PLAYER_1.LEFT, enemy, true);
-    handleMoveHoriz(player, KEY_BINDINGS.PLAYER_1.RIGHT, enemy, false);
-    handleMoveHoriz(enemy, KEY_BINDINGS.PLAYER_2.LEFT, player, true);
-    handleMoveHoriz(enemy, KEY_BINDINGS.PLAYER_2.RIGHT, player, false);
-    handleJump(player, KEY_BINDINGS.PLAYER_1.UP);
-    handleJump(enemy, KEY_BINDINGS.PLAYER_2.UP);
+    handleCrouchLogic(gameState.player, KEY_BINDINGS.PLAYER_1.DOWN);
+    handleCrouchLogic(gameState.enemy, KEY_BINDINGS.PLAYER_2.DOWN);
+    handleMoveHoriz(gameState.player, KEY_BINDINGS.PLAYER_1.LEFT, gameState.enemy, true);
+    handleMoveHoriz(gameState.player, KEY_BINDINGS.PLAYER_1.RIGHT, gameState.enemy, false);
+    handleMoveHoriz(gameState.enemy, KEY_BINDINGS.PLAYER_2.LEFT, gameState.player, true);
+    handleMoveHoriz(gameState.enemy, KEY_BINDINGS.PLAYER_2.RIGHT, gameState.player, false);
+    handleJump(gameState.player, KEY_BINDINGS.PLAYER_1.UP);
+    handleJump(gameState.enemy, KEY_BINDINGS.PLAYER_2.UP);
 }
 
 function handleAction() {
 
-    if (keys['KeyN']) {
-        keys['KeyW'] = false;
-        player.specialAttack(enemy);
-    }
-    handleAttack(player, KEY_BINDINGS.PLAYER_1.ATTACK, KEY_BINDINGS.PLAYER_1.DOWN, KEY_BINDINGS.PLAYER_1.BLOCK, enemy);
-    handleAttack(enemy, KEY_BINDINGS.PLAYER_2.ATTACK, KEY_BINDINGS.PLAYER_2.DOWN, KEY_BINDINGS.PLAYER_2.BLOCK, player);
-    handleThrow(player, KEY_BINDINGS.PLAYER_1.THROW, KEY_BINDINGS.PLAYER_1.BLOCK);
-    handleThrow(enemy, KEY_BINDINGS.PLAYER_2.THROW, KEY_BINDINGS.PLAYER_2.BLOCK);
+    handleStandAttack(gameState.player, KEY_BINDINGS.PLAYER_1.STAND, KEY_BINDINGS.PLAYER_1.BLOCK);
+    handleStandAttack(gameState.enemy, KEY_BINDINGS.PLAYER_2.STAND, KEY_BINDINGS.PLAYER_2.BLOCK);
+    handleAttack(gameState.player, KEY_BINDINGS.PLAYER_1.ATTACK, KEY_BINDINGS.PLAYER_1.DOWN, KEY_BINDINGS.PLAYER_1.BLOCK, gameState.enemy);
+    handleAttack(gameState.enemy, KEY_BINDINGS.PLAYER_2.ATTACK, KEY_BINDINGS.PLAYER_2.DOWN, KEY_BINDINGS.PLAYER_2.BLOCK, gameState.player);
+    handleThrow(gameState.player, KEY_BINDINGS.PLAYER_1.THROW, KEY_BINDINGS.PLAYER_1.BLOCK);
+    handleThrow(gameState.enemy, KEY_BINDINGS.PLAYER_2.THROW, KEY_BINDINGS.PLAYER_2.BLOCK);
     
 }
 
@@ -309,16 +331,16 @@ function setFrameCounts(assets) {
     for (const [key, value] of Object.entries(assets[player1])) {
         frameCount[key.toUpperCase()] = value.length;
     }
-    player.setFrameCount(frameCount);
+    gameState.player.setFrameCount(frameCount);
     frameCount = {}
      for (const [key, value] of Object.entries(assets[player2])) {
         frameCount[key.toUpperCase()] = value.length;
     }
-    enemy.setFrameCount(frameCount);
+    gameState.enemy.setFrameCount(frameCount);
 }
 
 function detectEndGame() {
-    if (player.hp <= 0 || enemy.hp <=0) gameEnded = true;
+    if (gameState.player.hp <= 0 || gameState.enemy.hp <=0) gameState.gameEnded = true;
 }
 
 /** HELPER **/
@@ -376,3 +398,45 @@ function handleThrow(actor, keyBinding1, keyBinding2) {
         actor.attack();
     }
 }
+
+function handleStandAttack(actor, keyBinding, keyBindingBlock) {
+    if (pressed(keyBinding)) {
+        release(keyBindingBlock);
+        actor.useStand(gameState.enemy);
+        console.log("stand used");
+        gameState.paused = true;
+        obstacle = new Obstacle(gameState.enemy.x, 0, TILE_SIZE*10, TILE_SIZE*10, actor.velocityX, "roadRoller");
+        setTimeout(() => {
+            gameState.paused = false
+        }, 5000)
+    }
+}
+
+function drawStandAnimation(actor, target, standType) {
+    switch (standType) {
+        case "ZA WARUDO":
+            drawZaWarudo(actor, target, obstacle);
+            break;
+        default: 
+        break;    
+    }
+}
+
+function drawZaWarudo(actor, target, roadRoller) {
+    context.filter = 'grayscale(0)';
+    let imgAssets;
+    if (actor.id === 1) {
+        imgAssets = gameState.playerAssets; 
+    } else {
+        imgAssets = gameState.enemyAssets;
+    }
+    roadRoller.applyPhysics(boardHeight);
+    drawHelper.drawStats(context, actor, {width: boardWidth, height: boardHeight}, true, gameState.playerAssets.portrait[0]);
+    drawHelper.drawStats(context, target, {width: boardWidth, height: boardHeight}, false, gameState.enemyAssets.portrait[0]);
+    drawHelper.drawCharacter(context, actor, imgAssets);
+    drawHelper.drawObject(context, roadRoller, imgAssets);
+    context.filter = 'grayscale(1)';
+    drawHelper.drawCharacter(context, target, imgAssets);
+    context.filter = 'grayscale(0)';
+}
+
